@@ -1,0 +1,8 @@
+*.db
+config.py
+.vscode
+.ipynb_checkpoints
+charts/
+logs/
+data/
+__pycache__/
