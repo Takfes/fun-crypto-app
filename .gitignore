@@ -3,5 +3,4 @@
 .ipynb_checkpoints
 charts/
 logs/
-data/
 __pycache__/
