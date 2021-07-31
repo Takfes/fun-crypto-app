@@ -2,7 +2,7 @@ import pandas as pd
 import ccxt
 import talib
 import patterns
-import tulipy
+# import tulipy
 import ta
 from ta import add_all_ta_features
 from ta.volatility import BollingerBands,AverageTrueRange
@@ -48,15 +48,15 @@ def get_signals_data():
 data = get_data()
 signals = get_signals_data()
 symbols = data.symbol.unique().tolist()
-current_page = st.sidebar.selectbox('Select Page',['Main','Screener','Binance'],1)
+current_page = st.sidebar.selectbox('Select Page',['Main','Screener','Binance'],2)
 if current_page in ['Main','Screener']:
     user_symbol =  st.sidebar.selectbox('Select Symbol',symbols)
 
 def Main():
     
-    # user_symbol =  st.sidebar.selectbox('Select Symbol',symbols)
-    # user_theme = st.sidebar.selectbox('Select Theme',[theme for theme in pio.templates])
-    # user_frequency = st.sidebar.selectbox('Select Resample Frequency',['5M','15M','30M','1H','4H','1D','7D','1M','All'])
+    user_symbol =  st.sidebar.selectbox('Select Symbol',symbols)
+    user_theme = st.sidebar.selectbox('Select Theme',[theme for theme in pio.templates])
+    user_frequency = st.sidebar.selectbox('Select Resample Frequency',['5M','15M','30M','1H','4H','1D','7D','1M','All'])
     user_indicators = st.sidebar.multiselect('Select Indicators',
                                              ['SMA','Bollinger Bands','RSI','MACD','ATR'], 
                                              default=['RSI','Bollinger Bands','MACD'])
