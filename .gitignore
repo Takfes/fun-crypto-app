@@ -1,5 +1,4 @@
 *.db
-config.py
 .vscode
 .ipynb_checkpoints
 charts/
