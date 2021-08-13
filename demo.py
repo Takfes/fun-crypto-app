@@ -1,5 +1,6 @@
 from logging import raiseExceptions
 from time import asctime
+from binance_f.model.constant import CandlestickInterval
 import pandas as pd
 import json
 import requests
@@ -24,6 +25,86 @@ import helpers
 from tqdm import tqdm
 import cryptocompare
 from coinmarketcap import Market
+
+
+
+# %% binance_f sdk
+
+import config
+import pandas as pd
+from datetime import datetime
+from binance_f import RequestClient
+from binance_f.model import CandlestickInterval
+from binance_f.base.printobject import PrintMix
+from helpers import datetime_to_timestamp, timestamp_to_datetime, timestring_to_unix
+
+bclient = RequestClient(api_key=config.BINANCE_API_KEY, secret_key=config.BINANCE_API_SECRET)
+
+symbols = config.PREXTICKS
+
+for sym in symbols:
+    print(sym)
+
+def binance_candles_to_df(candledata,symbol):
+
+    pr = [
+        (
+        x.open,x.high,x.low,x.close,x.volume
+        ,x.openTime,x.closeTime,x.numTrades,x.quoteAssetVolume
+        ,x.takerBuyBaseAssetVolume,x.takerBuyQuoteAssetVolume
+        )
+        for x in candledata
+    ]
+
+    df = pd.DataFrame(pr,columns=['open','high','low','close','volume',
+                                'openTimets','closeTimets','numTrades','quoteAssetVolume',
+                                'takerBuyBaseAssetVolume','takerBuyQuoteAssetVolume'])
+
+    df['openTime'] = pd.to_datetime(df['openTimets'].apply(lambda x : timestamp_to_datetime(x)))
+    df['closeTime'] = pd.to_datetime(df['closeTimets'].apply(lambda x : timestamp_to_datetime(x)))
+    df['symbol'] = symbol
+
+    column_select = ['symbol','openTimets','closeTimets','openTime','closeTime',\
+        'open','high','low','close','volume','numTrades','quoteAssetVolume',\
+            'takerBuyBaseAssetVolume','takerBuyQuoteAssetVolume'
+            ]
+
+    return df[column_select]
+
+et = timestring_to_unix(datetime.now())
+
+results = bclient.get_candlestick_data(symbol=sym,interval=CandlestickInterval.MIN15,\
+    startTime=None, endTime=None, limit=1000)
+
+df = binance_candles_to_df(results,sym)
+df.shape
+df.openTime.min()
+df.openTime.max()
+df.openTimets.min() # 1627959600000
+df.openTimets.max() # 1628858700000
+df.dtypes
+df.head()
+
+et = df.openTimets.min()
+
+results2 = bclient.get_candlestick_data(symbol=sym,interval=CandlestickInterval.MIN15,\
+    startTime=None, endTime=et, limit=1000)
+
+df2 = binance_candles_to_df(results2,sym)
+df2.shape
+df2.openTime.min()
+df2.openTime.max()
+df2.openTimets.min() # 1627060500000
+df2.openTimets.max() # 1627959600000
+df2.dtypes
+
+dt = pd.concat([df,df2])
+dt.shape
+dt.openTimets.value_counts()
+dt.drop_duplicates(subset=['symbol','openTimets']).shape
+
+
+
 
 
 # %% https://www.cryptocompare.com/coins/list/all/USD/1 web page api

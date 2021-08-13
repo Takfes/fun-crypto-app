@@ -5,6 +5,7 @@ import sqlite3
 from sqlite3 import Error
 from tqdm import tqdm
 import ccxt
+import time
 
 def get_stocks_list():
     stock_list_files = [x for x in os.listdir('./data') if x.startswith('nasdaq_screener_')]
@@ -60,6 +61,12 @@ def datetime_to_timestamp(x,local=False):
     from_timestamp_local = int(time.mktime(datetime.strptime(x, "%Y-%m-%d").timetuple()))
     from_timestamp_utc = calendar.timegm(time.strptime(x, "%Y-%m-%d"))
     return from_timestamp_local if local else from_timestamp_utc
+
+def timestring_to_unix(timestring):
+    # timestring = '2019-01-01 00:00:00'
+    d = pd.to_datetime(timestring)
+    unixtime = int(datetime.timestamp(d)*1000)
+    return unixtime
 
 def get_ccxt_data(exchange, pairs, timeframe):
     
