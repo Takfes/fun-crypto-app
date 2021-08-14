@@ -4,5 +4,5 @@
 charts/
 logs/
 __pycache__/
-data/
+!data/*.dvc
 .DS_Store
