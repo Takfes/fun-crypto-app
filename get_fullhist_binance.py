@@ -96,4 +96,3 @@ if __name__=="__main__":
     qq.to_pickle(filename+'.pkl')
     report.to_csv(filename+'_report.csv',index=False)
 
-    
