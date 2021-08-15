@@ -1,7 +1,7 @@
 
 # ------------------ DB CONFIG ------------------ #
 
-DB_NAME ='assets.db'
+DB_NAME ='data/assets.db'
 
 DB_ASSET_TABLE = 'assets'
 DB_ASSET_TABLE_INDEX = 'time_symbol'
@@ -15,6 +15,8 @@ DB_ASSET_TABLE_CRYPTO_DAILY_INDEX = 'time_symbol_cryptodaily'
 DB_ASSET_TABLE_STOCK_DAILY = 'stockdaily'
 DB_ASSET_TABLE_STOCK_DAILY_INDEX = 'time_symbol_stockdaily'
 
+DB_ASSET_TABLE_FUTURES_15 = 'futures15'
+DB_ASSET_TABLE_FUTURES_15_INDEX = 'time_symbol_futures15'
 
 # ------------------ API KEYS ------------------ #
 
