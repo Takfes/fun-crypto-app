@@ -27,7 +27,7 @@ strategies = {
 
 def parse_user_input():
     parser = argparse.ArgumentParser()
-    parser.add_argument('type',help="what kind of asset : ['stock','crypto','crypto15']",type=str)
+    parser.add_argument('type',help="what kind of asset : ['stock','crypto','crypto15','futures15']",type=str)
     parser.add_argument('symbol',help='which symbol to test',type=str)
     parser.add_argument('strategy',help=f'which strategy to test : {list(strategies.keys())}',type=str)
     parser.add_argument('cash',help='set cash amount',type=str)
@@ -43,9 +43,14 @@ def get_price_series(type, symbol, con):
         sql_string = f"SELECT * FROM cryptodaily WHERE symbol = '{symbol}' ORDER BY datetime"
     elif type == 'crypto15':
         sql_string = f"SELECT * FROM crypto WHERE symbol = '{symbol}' ORDER BY datetime"
-        
-    price_series = pd.read_sql(sql_string,con).assign(datetime = lambda x : pd.to_datetime(x.datetime)).set_index('datetime')
-    return price_series
+    elif type == 'futures15':
+        sql_string = f"SELECT * FROM futures15 WHERE symbol = '{symbol}' ORDER BY openTimets"
+        price_series = pd.read_sql(sql_string,con).assign(openTime = lambda x : pd.to_datetime(x.openTime)).set_index('openTime')
+        return price_series
+
+    if type != 'futures15':
+        price_series = pd.read_sql(sql_string,con).assign(datetime = lambda x : pd.to_datetime(x.datetime)).set_index('datetime')
+        return price_series
 
 if __name__ == '__main__':
 
@@ -73,7 +78,7 @@ if __name__ == '__main__':
                 feed = bt.feeds.PandasData(dataname=price_series)
                 cerebro.adddata(feed)
                 
-                cerebro.addstrategy(strategies[args.strategy],ticker = args.symbol, risk=args.risk)
+                cerebro.addstrategy(strategies[args.strategy],ticker = args.symbol)# risk=args.risk)
                 # cerebro.addstrategy(GoldenCross, fast=20, slow=100)
                 
                 cerebro.run()
@@ -84,7 +89,9 @@ if __name__ == '__main__':
                 print(f'Final Portfolio Value: {end_portfolio_value:2f}')
                 print(f'PnL: {pnl:.2f}')
                 
-                cerebro.plot()
+                figure = cerebro.plot()
+                figure.savefig('example.png')
+                # cerebro.plot(savefig=True, figfilename='backtrader-plot.png')
                 
             else :
                 print('Invalid symbol')
