@@ -1,14 +1,33 @@
 import math
 import backtrader as bt
+from numpy import UFUNC_PYVALS_NAME
 
 class Dictum(bt.Strategy):
     
     params = (('risk',0.25),('ticker','ETH'),('period',-20))
         
     def __init__(self):
+
         self.dataclose = self.datas[0].close
         self.bb = bt.indicators.BollingerBands(self.data,period=30)
         
+        # Custom Fibonacci Retracement Levels
+        fratios = [0.236,0.382,0.5,0.618,0.786]
+        minp, maxp = min(self.dataclose), max(self.dataclose)
+        rangep = maxp - minp
+        rangep_fratios = [rangep * r for r in fratios]
+
+        upward_trend_fib = [maxp - x for x in rangep_fratios]
+        upward_trend_fib.append(maxp)
+        upward_trend_fib.sort()
+        upward_trend_fib
+
+        downward_trend_fib = [minp + x for x in rangep_fratios]
+        downward_trend_fib.append(minp)
+        downward_trend_fib.sort()
+        downward_trend_fib
+
+
     def log(self, txt, dt=None):
         dt = dt or self.datas[0].datetime.date(0)
         print(f'{dt.isoformat()} {txt}') #Print date and close
