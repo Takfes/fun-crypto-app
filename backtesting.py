@@ -1,6 +1,4 @@
 import os, sys, argparse
-from strategies.BearX import BearX
-from strategies.TripleFoo import TripleFoo
 import config
 import sqlite3
 import pandas as pd
@@ -14,6 +12,7 @@ from strategies.Stochastic import Stochastic
 from strategies.TripleFoo import TripleFoo
 from strategies.BuyDip import BuyDip
 from strategies.BearX import BearX
+from strategies.Dictum import Dictum
 
 strategies = {
     'ma':GoldenCross,
@@ -22,7 +21,8 @@ strategies = {
     'stoc':Stochastic,
     'triple':TripleFoo,
     'dip':BuyDip,
-    'bearx':BearX
+    'bearx':BearX,
+    'dic':Dictum
 }
 
 def parse_user_input():
@@ -44,13 +44,14 @@ def get_price_series(type, symbol, con):
     elif type == 'crypto15':
         sql_string = f"SELECT * FROM crypto WHERE symbol = '{symbol}' ORDER BY datetime"
     elif type == 'futures15':
-        sql_string = f"SELECT * FROM futures15 WHERE symbol = '{symbol}' ORDER BY openTimets"
-        price_series = pd.read_sql(sql_string,con).assign(openTime = lambda x : pd.to_datetime(x.openTime)).set_index('openTime')
-        return price_series
-
+        sql_string = f"SELECT * FROM futures15 WHERE symbol = '{symbol}' and openTime >= '2021-01-01' ORDER BY openTimets"
+        
     if type != 'futures15':
         price_series = pd.read_sql(sql_string,con).assign(datetime = lambda x : pd.to_datetime(x.datetime)).set_index('datetime')
-        return price_series
+    else:
+        price_series = pd.read_sql(sql_string,con).assign(openTime = lambda x : pd.to_datetime(x.openTime)).set_index('openTime')
+
+    return price_series
 
 if __name__ == '__main__':
 
@@ -65,8 +66,9 @@ if __name__ == '__main__':
     try :
         
         con = sqlite3.connect(config.DB_NAME)
-        # price_series = get_price_series(SYMBOL,con)
+        # price_series = get_price_series('futures15','ETHUSDT',con)
         price_series = get_price_series(args.type,args.symbol,con)
+
 
         if isinstance(price_series,pd.DataFrame):
             if not price_series.empty:
@@ -78,7 +80,7 @@ if __name__ == '__main__':
                 feed = bt.feeds.PandasData(dataname=price_series)
                 cerebro.adddata(feed)
                 
-                cerebro.addstrategy(strategies[args.strategy],ticker = args.symbol)# risk=args.risk)
+                cerebro.addstrategy(strategies[args.strategy],ticker = args.symbol, risk=args.risk)
                 # cerebro.addstrategy(GoldenCross, fast=20, slow=100)
                 
                 cerebro.run()
@@ -89,8 +91,8 @@ if __name__ == '__main__':
                 print(f'Final Portfolio Value: {end_portfolio_value:2f}')
                 print(f'PnL: {pnl:.2f}')
                 
-                figure = cerebro.plot()
-                figure.savefig('example.png')
+                cerebro.plot()
+                # figure.savefig('example.png')
                 # cerebro.plot(savefig=True, figfilename='backtrader-plot.png')
                 
             else :
