@@ -32,6 +32,9 @@ def parse_user_input():
     parser.add_argument('strategy',help=f'which strategy to test : {list(strategies.keys())}',type=str)
     parser.add_argument('cash',help='set cash amount',type=str)
     parser.add_argument('risk',help='percentage of budget to risk',type=float)
+    parser.add_argument('percentage_change',help='percentage change for take_profit/stop_loss',type=float)
+    parser.add_argument('short',help='open short positions',type=int)
+
     args = parser.parse_args()
     return args
 
@@ -44,7 +47,7 @@ def get_price_series(type, symbol, con):
     elif type == 'crypto15':
         sql_string = f"SELECT * FROM crypto WHERE symbol = '{symbol}' ORDER BY datetime"
     elif type == 'futures15':
-        sql_string = f"SELECT * FROM futures15 WHERE symbol = '{symbol}' and openTime < '2021-08-13 15:30:00' ORDER BY openTimets" # and openTime >= '2021-08-01'
+        sql_string = f"SELECT * FROM futures15 WHERE symbol = '{symbol}' and openTime >= '2021-07-01' and openTime < '2021-08-13 15:30:00' ORDER BY openTimets"
     if type != 'futures15':
         price_series = pd.read_sql(sql_string,con).assign(datetime = lambda x : pd.to_datetime(x.datetime)).set_index('datetime')
     else:
@@ -60,7 +63,7 @@ if __name__ == '__main__':
         print(f'Invalid strategy. Must be one of {list(strategies.keys())}') 
         sys.exit()
         
-    print(f'* symbol : {args.symbol}\n* strategy : {args.strategy}\n* cash : {args.cash}')
+    print(f'* symbol : {args.symbol}\n* strategy : {args.strategy}\n* cash : {args.cash}\n* risk : {args.risk}\n* percentage_change : {args.percentage_change}\n* short : {bool(args.short)}')
     
     try :
         
@@ -78,8 +81,8 @@ if __name__ == '__main__':
                 
                 feed = bt.feeds.PandasData(dataname=price_series)
                 cerebro.adddata(feed)
-                
-                cerebro.addstrategy(strategies[args.strategy],ticker = args.symbol, risk=args.risk)
+
+                cerebro.addstrategy(strategies[args.strategy],ticker = args.symbol, risk=args.risk, percentage_change = args.percentage_change, short = bool(args.short))
                 # cerebro.addstrategy(GoldenCross, fast=20, slow=100)
                 
                 cerebro.run()

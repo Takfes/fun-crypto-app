@@ -59,7 +59,9 @@ class DICK(bt.Indicator):
 
 class Dictum(bt.Strategy):
     
-    params = (('risk',0.25),('ticker','ETH'),('wma_period',300))
+    params = (('risk',0.25),('ticker','ETH'),
+              ('wma_period',300),('percentage_change',0.01),
+              ('short',False))
         
     def __init__(self):
 
@@ -70,21 +72,54 @@ class Dictum(bt.Strategy):
 
     def log(self, txt, dt=None):
         dt = dt or self.datas[0].datetime.date(0)
-        # print(f'{dt.isoformat()} {txt}') #Print date and close
+        print(f'{dt.isoformat()} {txt}') #Print date and close
             
     def notify_order(self, order):
-        print("YOU ARE IN NOTIFY_ORDER")
+        # print("YOU ARE IN NOTIFY_ORDER")
         if order.status in [order.Submitted, order.Accepted]:
             return
         if order.status in [order.Completed]:
             if order.isbuy():
-                self.log(f'BUY EXECUTED : {order.executed.price}')
+                # self.log(f'BUY EXECUTED : {order.executed.price}')
                 self.take_profit = order.executed.price
             elif order.issell():
-                self.log(f'SELL EXECUTED : {order.executed.price}')
+                # self.log(f'SELL EXECUTED : {order.executed.price}')
                 self.take_profit = order.executed.price
             self.bar_executed = len(self)
         self.order = None
                 
     def next(self):
-        pass
+        
+        if not self.position:
+
+            if (self.dataclose[0] > self.dick.lines.bbt) and (self.dataclose[0] > self.wma):
+                amount_to_invest = (self.params.risk * self.broker.cash)
+                self.size = math.floor(amount_to_invest/self.dataclose[0])
+                print(f'Buy {self.size} shares of {self.params.ticker} at {self.data.close[0]}')
+                self.buy(size=self.size)
+            
+            if self.p.short:
+                if (self.dataclose[0] < self.dick.lines.bbb) and (self.dataclose[0] < self.wma):
+                    amount_to_invest = (self.params.risk * self.broker.cash)
+                    self.size = math.floor(amount_to_invest/self.dataclose[0])
+                    print(f'Sell {self.size} shares of {self.params.ticker} at {self.data.close[0]}')
+                    self.sell(size=self.size)
+            
+        else:
+            
+            if self.position.size > 0:
+                if self.dataclose[0] >= self.take_profit * (1 + self.p.percentage_change):
+                    self.close()
+                    print(f'> Close LONG position')#: {self.getposition()}')
+            
+            if self.p.short:
+                if self.position.size < 0:
+                    if self.dataclose[0] <= self.take_profit * (1 - self.p.percentage_change):
+                        self.close()
+                        print(f'> Close SHORT position')#: {self.getposition()}')
+
+        # stopLoss
+        # takeProfit (target)
+        # number of singals
+        # accuracy (takeProfit/num of signals)
+        # net profit
