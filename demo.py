@@ -27,6 +27,24 @@ import cryptocompare
 from coinmarketcap import Market
 
 
+# %% Custom Fibonacci Retracement Levels
+
+# Custom Fibonacci Retracement Levels
+fratios = [0.236,0.382,0.5,0.618,0.786]
+minp, maxp = min(self.dataclose), max(self.dataclose)
+rangep = maxp - minp
+rangep_fratios = [rangep * r for r in fratios]
+
+upward_trend_fib = [maxp - x for x in rangep_fratios]
+upward_trend_fib.append(maxp)
+upward_trend_fib.sort()
+upward_trend_fib
+
+downward_trend_fib = [minp + x for x in rangep_fratios]
+downward_trend_fib.append(minp)
+downward_trend_fib.sort()
+downward_trend_fib
+
 # %% https://www.cryptocompare.com/coins/list/all/USD/1 web page api
 
 def get_sorted_crypto():

@@ -1,36 +1,76 @@
 import math
 import backtrader as bt
-from numpy import UFUNC_PYVALS_NAME
+import numpy as np
+import sys
+
+debug = False
+
+class DICK(bt.Indicator):
+
+    # global vwma_list, bbt_list, bbb_list
+    # vwma_list = bbt_list = bbb_list = []
+
+    lines = ('vwma','bbt','bbb')  # output lines (array)
+    params = (
+        ('period', 110),
+        ('factor', 0.618),
+        ('multiplier', 3.0) 
+    )
+
+    def __init__(self):
+        # indicate min period ; i.e. buffering period
+        self.addminperiod(self.p.period)
+
+    def next(self):
+
+        # calculate vwma
+        highp = np.array(self.data.high.get(size=self.p.period))
+        lowp = np.array(self.data.low.get(size=self.p.period))
+        closep = np.array(self.data.close.get(size=self.p.period))
+        volumep = np.array(self.data.volume.get(size=self.p.period))
+        hlcp = (highp + lowp + closep)/3.0
+        sumprodp = hlcp * volumep
+        vwma = sum(sumprodp)/sum(volumep)
+        # add vwma line
+        self.lines.vwma[0] = vwma
+        # vwma_list.append(vwma[-1])
+
+        # calculate stdev hlc
+        std = np.std(hlcp)
+        # add bbt & bbb lines
+        self.lines.bbt[0] = vwma + (self.p.multiplier * self.p.factor * std)
+        self.lines.bbb[0] = vwma - (self.p.multiplier * self.p.factor * std)
+        # bbt_list.append(hlcp[-1] + self.p.factor * std)
+        # bbb_list.append(hlcp[-1] - self.p.factor * std)
+
+        if debug :
+            print('> highp : ','\n',type(highp),'\n',highp,'\n')
+            print('> lowp : ','\n',type(lowp),'\n',lowp,'\n')
+            print('> closep : ','\n',type(closep),'\n',closep,'\n')
+            print('> volumep : ','\n',type(volumep),'\n',volumep,'\n')
+            print('> hlcp : ','\n',type(hlcp),'\n',hlcp,'\n')
+            print('> sumprodp : ','\n',type(sumprodp),'\n',sumprodp,'\n')
+            print('> vwma : ','\n',type(vwma),'\n',vwma,'\n')
+            print('> std(hlcp) : ','\n',type(std),'\n',std,'\n')
+            # print('> vwma_list) : ','\n',vwma_list,'\n')
+            # print('> bbt_list) : ','\n',bbt_list,'\n')
+            # print('> bbb_list) : ','\n',bbb_list,'\n')
+
 
 class Dictum(bt.Strategy):
     
-    params = (('risk',0.25),('ticker','ETH'),('period',-20))
+    params = (('risk',0.25),('ticker','ETH'),('wma_period',300))
         
     def __init__(self):
 
         self.dataclose = self.datas[0].close
-        self.bb = bt.indicators.BollingerBands(self.data,period=30)
-        
-        # Custom Fibonacci Retracement Levels
-        fratios = [0.236,0.382,0.5,0.618,0.786]
-        minp, maxp = min(self.dataclose), max(self.dataclose)
-        rangep = maxp - minp
-        rangep_fratios = [rangep * r for r in fratios]
-
-        upward_trend_fib = [maxp - x for x in rangep_fratios]
-        upward_trend_fib.append(maxp)
-        upward_trend_fib.sort()
-        upward_trend_fib
-
-        downward_trend_fib = [minp + x for x in rangep_fratios]
-        downward_trend_fib.append(minp)
-        downward_trend_fib.sort()
-        downward_trend_fib
-
+        self.wma = bt.indicators.WeightedMovingAverage(self.data,period=self.p.wma_period)
+        dick = self.dick = DICK(self.data)
+        dick.plotinfo.subplot = False
 
     def log(self, txt, dt=None):
         dt = dt or self.datas[0].datetime.date(0)
-        print(f'{dt.isoformat()} {txt}') #Print date and close
+        # print(f'{dt.isoformat()} {txt}') #Print date and close
             
     def notify_order(self, order):
         print("YOU ARE IN NOTIFY_ORDER")
@@ -47,28 +87,4 @@ class Dictum(bt.Strategy):
         self.order = None
                 
     def next(self):
-        self.log('Close, %.5f' % self.datas[0].close[0])
-              
-        if not self.position:
-            if self.data.close < self.bb.lines.bot :
-                amount_to_invest = (self.params.risk * self.broker.cash)
-                # self.size = round(amount_to_invest/self.data.close,0)
-                self.size = math.floor(amount_to_invest/self.dataclose[0])
-                print(f'Buy {self.size} shares of {self.params.ticker} at {self.data.close[0]}')
-                self.buy(size=self.size)
-            
-            # if self.data.close >= self.bb.lines.top:
-            #     amount_to_invest = (self.params.risk * self.broker.cash)
-            #     # self.size = round(amount_to_invest/self.data.close,0)
-            #     self.size = math.floor(amount_to_invest/self.dataclose[0])
-            #     print(f'Sell {self.size} shares of {self.params.ticker} at {self.data.close[0]}')
-            #     self.sell(size=self.size)
-
-        else:
-            
-            if self.data.close >= (self.bb.lines.top * 0.7):
-                self.log(f'CLOSE POSITION for {self.params.ticker} @ {self.dataclose[0]}')
-                self.order = self.close()
-            # if self.data.close < (self.bb.lines.bot * 0.7):
-            #     self.log(f'CLOSE POSITION for {self.params.ticker} @ {self.dataclose[0]}')
-            #     self.order = self.close()
+        pass

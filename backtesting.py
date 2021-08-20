@@ -44,8 +44,7 @@ def get_price_series(type, symbol, con):
     elif type == 'crypto15':
         sql_string = f"SELECT * FROM crypto WHERE symbol = '{symbol}' ORDER BY datetime"
     elif type == 'futures15':
-        sql_string = f"SELECT * FROM futures15 WHERE symbol = '{symbol}' and openTime >= '2021-01-01' ORDER BY openTimets"
-        
+        sql_string = f"SELECT * FROM futures15 WHERE symbol = '{symbol}' and openTime < '2021-08-13 15:30:00' ORDER BY openTimets" # and openTime >= '2021-08-01'
     if type != 'futures15':
         price_series = pd.read_sql(sql_string,con).assign(datetime = lambda x : pd.to_datetime(x.datetime)).set_index('datetime')
     else:
@@ -68,7 +67,7 @@ if __name__ == '__main__':
         con = sqlite3.connect(config.DB_NAME)
         # price_series = get_price_series('futures15','ETHUSDT',con)
         price_series = get_price_series(args.type,args.symbol,con)
-
+        print(f'> backtesting.py : fetched {price_series.shape[0]} rows for {args.symbol}')
 
         if isinstance(price_series,pd.DataFrame):
             if not price_series.empty:
