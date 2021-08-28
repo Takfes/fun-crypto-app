@@ -13,6 +13,7 @@ from strategies.TripleFoo import TripleFoo
 from strategies.BuyDip import BuyDip
 from strategies.BearX import BearX
 from strategies.Dictum import Dictum
+from strategies.TripleH import TripleH
 
 strategies = {
     'ma':GoldenCross,
@@ -22,7 +23,8 @@ strategies = {
     'triple':TripleFoo,
     'dip':BuyDip,
     'bearx':BearX,
-    'dic':Dictum
+    'dic':Dictum,
+    '3h':TripleH
 }
 
 def parse_user_input():
@@ -84,7 +86,8 @@ if __name__ == '__main__':
 
                 cerebro.addstrategy(strategies[args.strategy],ticker = args.symbol, risk=args.risk, percentage_change = args.percentage_change, short = bool(args.short))
                 # cerebro.addstrategy(GoldenCross, fast=20, slow=100)
-                
+                # cerebro.addstrategy(strategies[args.strategy],ticker = args.symbol)
+
                 cerebro.run()
                 
                 end_portfolio_value = cerebro.broker.getvalue()
