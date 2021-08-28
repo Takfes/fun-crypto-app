@@ -108,15 +108,25 @@ class Dictum(bt.Strategy):
         else:
             
             if self.position.size > 0:
-                if self.dataclose[0] >= self.take_profit * (1 + self.p.percentage_change):
+                if self.dataclose[0] >= self.take_profit * (1 + self.p.percentage_change) or self.dataclose[0] < self.take_profit * (1 + self.p.percentage_change):
                     self.close()
-                    print(f'> Close LONG position')#: {self.getposition()}')
-            
+                    print(f'> Close LONG position at {self.data.close[0]}')#: {self.getposition()}')
+                    diff = self.data.close[0] - self.data.close[-1]
+                    if diff > 0:
+                        print(f'Profit!')
+                    else:
+                        print(f'Loss!')
+
             if self.p.short:
                 if self.position.size < 0:
-                    if self.dataclose[0] <= self.take_profit * (1 - self.p.percentage_change):
+                    if self.dataclose[0] <= self.take_profit * (1 - self.p.percentage_change) or self.dataclose[0] > self.take_profit * (1 - self.p.percentage_change):
                         self.close()
-                        print(f'> Close SHORT position')#: {self.getposition()}')
+                        print(f'> Close SHORT position at {self.data.close[0]}')#: {self.getposition()}')
+                        diff = self.data.close[0] - self.data.close[-1]
+                        if diff < 0:
+                            print(f'Profit!')
+                        else:
+                            print(f'Loss!')
 
         # stopLoss
         # takeProfit (target)
