@@ -84,7 +84,7 @@ if __name__ == '__main__':
         # strategy_settings['cash'] =  cash
         # strategy_settings['risk'] =  risk
 
-        strategy_settings['symbol'] =  args.symbol
+        strategy_settings['ticker'] =  args.symbol
         strategy_settings['cash'] =  args.cash
         strategy_settings['risk'] =  args.risk
         
