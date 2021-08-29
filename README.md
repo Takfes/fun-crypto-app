@@ -11,3 +11,7 @@
 
 ### Additional Strategy Parameters in 
 > backtesting_strategies.py
+
+### TODO : 
+when budget = 1000 there are no buys for ETHUSDT (example)
+probably there is not enough money to buy

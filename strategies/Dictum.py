@@ -78,10 +78,10 @@ class Dictum(bt.Strategy):
     def __init__(self, params):
 
         self.params = params
-        print('>> Dictum Strategy Params :')
-        for k,v in self.params.items():
-            print(f'{k} : {v}')
-        print()
+        # print('>> Dictum Strategy Params :')
+        # for k,v in self.params.items():
+        #     print(f'{k} : {v}')
+        # print()
         self.dataclose = self.datas[0].close
         self.wma = bt.indicators.WeightedMovingAverage(self.data,period=self.params.get('wma_period'))
         dick = self.dick = DICK(self.data)

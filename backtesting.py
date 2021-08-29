@@ -29,6 +29,14 @@ strategies = {
     '3h':TripleH
 }
 
+optimizer = False
+
+# # degub
+# type = 'futures15'
+# symbol = 'ETHUSDT'
+# cash = 10_000
+# risk = 0.5
+
 def parse_user_input():
     parser = argparse.ArgumentParser()
     parser.add_argument('type',help="what kind of asset : ['stock','crypto','crypto15','futures15']",type=str)
@@ -64,8 +72,18 @@ if __name__ == '__main__':
         print(f'Invalid strategy. Must be one of {list(strategies.keys())}') 
         sys.exit()
     else:
+        # strategy_settings = strategy_settings_dictionary['dic']
         strategy_settings = strategy_settings_dictionary[args.strategy]
-        
+
+        # check whether any of the parameters passed is list
+        # if so, enable cerebro.optstrategy instead of cerebro.addstrategy
+        if any([isinstance(p,list) for p in strategy_settings.values()]):
+            optimizer = True
+
+        # strategy_settings['symbol'] =  symbol
+        # strategy_settings['cash'] =  cash
+        # strategy_settings['risk'] =  risk
+
         strategy_settings['symbol'] =  args.symbol
         strategy_settings['cash'] =  args.cash
         strategy_settings['risk'] =  args.risk
@@ -77,11 +95,10 @@ if __name__ == '__main__':
         print(f'====================================')
         print()
 
-
-
     try :
         
         con = sqlite3.connect(config.DB_NAME)
+        # price_series = get_price_series(type,symbol,con)
         price_series = get_price_series(args.type,args.symbol,con)
         print(f'> backtesting.py : fetched {price_series.shape[0]} rows for {args.symbol}')
 
@@ -89,6 +106,8 @@ if __name__ == '__main__':
             if not price_series.empty:
 
                 cerebro = bt.Cerebro()
+
+                # cerebro.broker.setcash(cash)
                 cerebro.broker.setcash(int(args.cash))
                 start_portfolio_value = cerebro.broker.getvalue()
                 
@@ -96,26 +115,28 @@ if __name__ == '__main__':
                 feed = bt.feeds.PandasData(dataname=price_series)
                 cerebro.adddata(feed)
 
-                # Add Strategy
-                cerebro.addstrategy(strategies[args.strategy],params = strategy_settings)
-                # cerebro.addstrategy(strategies[args.strategy],ticker = args.symbol, risk=args.risk, percentage_change = args.percentage_change, short = bool(args.short))
-                # cerebro.addstrategy(GoldenCross, fast=20, slow=100)
-                # cerebro.addstrategy(strategies[args.strategy],ticker = args.symbol)
+                # Add Strategy or Optimizer according to parameter input
+                if not(optimizer):
+                    cerebro.addstrategy(strategies[args.strategy],params = strategy_settings)
+                    # cerebro.addstrategy(strategies[args.strategy],ticker = args.symbol, risk=args.risk, percentage_change = args.percentage_change, short = bool(args.short))
+                else :
+                    cerebro.optstrategy(strategies[args.strategy],params = strategy_settings)
+                    cerebro.optstrategy(strategies['dic'],params = strategy_settings)
 
                 # Add Analyzer
                 cerebro.addanalyzer(bt.analyzers.DrawDown, _name='mydrawdown')
                 cerebro.addanalyzer(bt.analyzers.SharpeRatio, _name='mysharpe')
-                cerebro.addanalyzer(bt.analyzers.PositionsValue, _name='mypositionsvalue')
-                cerebro.addanalyzer(bt.analyzers.PyFolio, _name='mypyfolio')
-                cerebro.addanalyzer(bt.analyzers.PeriodStats, _name='myperiodstats')
-                cerebro.addanalyzer(bt.analyzers.SQN, _name='mysqn')
-                cerebro.addanalyzer(bt.analyzers.TradeAnalyzer, _name='mytradeanalyzer')
-                cerebro.addanalyzer(bt.analyzers.Transactions, _name='mytransactions')
+                cerebro.addanalyzer(bt.analyzers.Returns, _name='myreturns')
+                # cerebro.addanalyzer(bt.analyzers.PositionsValue, _name='mypositionsvalue')
+                # cerebro.addanalyzer(bt.analyzers.PyFolio, _name='mypyfolio')
+                # cerebro.addanalyzer(bt.analyzers.PeriodStats, _name='myperiodstats')
+                # cerebro.addanalyzer(bt.analyzers.SQN, _name='mysqn')
+                # cerebro.addanalyzer(bt.analyzers.TradeAnalyzer, _name='mytradeanalyzer')
+                # cerebro.addanalyzer(bt.analyzers.Transactions, _name='mytransactions')
 
                 # Run
                 R = cerebro.run()
                 H = R[0]
-
                 
                 # Basic Results
                 end_portfolio_value = cerebro.broker.getvalue()
@@ -128,10 +149,11 @@ if __name__ == '__main__':
                 # https://www.backtrader.com/docu/analyzers-reference/
                 print('Draw Down:', H.analyzers.mydrawdown.get_analysis())
                 print('Sharpe Ratio:', H.analyzers.mysharpe.get_analysis())
+                print('Returns:', H.analyzers.myreturns.get_analysis())
                 # print('Position Value:', H.analyzers.mypositionsvalue.get_analysis())
                 # print('PyFolio:', H.analyzers.mypyfolio.get_analysis())
                 # print('Period Stats:', H.analyzers.myperiodstats.get_analysis())
-                print('SQN:', H.analyzers.mysqn.get_analysis())
+                # print('SQN:', H.analyzers.mysqn.get_analysis())
                 # print('Trade Analyzer:', H.analyzers.mytradeanalyzer.get_analysis())
                 # print('Transactions:', H.analyzers.mytransactions.get_analysis())
 
