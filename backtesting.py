@@ -105,13 +105,12 @@ if __name__ == '__main__':
                 # Add Analyzer
                 cerebro.addanalyzer(bt.analyzers.DrawDown, _name='mydrawdown')
                 cerebro.addanalyzer(bt.analyzers.SharpeRatio, _name='mysharpe')
-
-                # cerebro.addanalyzer(bt.analyzers.PositionsValue, _name='mypositionsvalue')
-                # cerebro.addanalyzer(bt.analyzers.PyFolio, _name='mypyfolio')
-                # cerebro.addanalyzer(bt.analyzers.PeriodStats, _name='myperiodstats')
-                # cerebro.addanalyzer(bt.analyzers.SQN, _name='mysqn')
-                # cerebro.addanalyzer(bt.analyzers.TradeAnalyzer, _name='mytradeanalyzer')
-                # cerebro.addanalyzer(bt.analyzers.Transactions, _name='mytransactions')
+                cerebro.addanalyzer(bt.analyzers.PositionsValue, _name='mypositionsvalue')
+                cerebro.addanalyzer(bt.analyzers.PyFolio, _name='mypyfolio')
+                cerebro.addanalyzer(bt.analyzers.PeriodStats, _name='myperiodstats')
+                cerebro.addanalyzer(bt.analyzers.SQN, _name='mysqn')
+                cerebro.addanalyzer(bt.analyzers.TradeAnalyzer, _name='mytradeanalyzer')
+                cerebro.addanalyzer(bt.analyzers.Transactions, _name='mytransactions')
 
                 # Run
                 R = cerebro.run()
@@ -126,8 +125,15 @@ if __name__ == '__main__':
                 print(f'PnL: {pnl:.2f}')
 
                 # Analyzer Results
-                print('Sharpe Ratio:', H.analyzers.mysharpe.get_analysis())
+                # https://www.backtrader.com/docu/analyzers-reference/
                 print('Draw Down:', H.analyzers.mydrawdown.get_analysis())
+                print('Sharpe Ratio:', H.analyzers.mysharpe.get_analysis())
+                # print('Position Value:', H.analyzers.mypositionsvalue.get_analysis())
+                # print('PyFolio:', H.analyzers.mypyfolio.get_analysis())
+                # print('Period Stats:', H.analyzers.myperiodstats.get_analysis())
+                print('SQN:', H.analyzers.mysqn.get_analysis())
+                # print('Trade Analyzer:', H.analyzers.mytradeanalyzer.get_analysis())
+                # print('Transactions:', H.analyzers.mytransactions.get_analysis())
 
                 # Plot Results
                 cerebro.plot()
