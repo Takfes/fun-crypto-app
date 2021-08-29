@@ -137,6 +137,7 @@ class Dictum(bt.Strategy):
                 if self.position.size < 0:
                     if self.dataclose[0] <= self.executed_price * (1 - self.params.get('stoploss')) or self.dataclose[0] > self.executed_price * (1 - self.params.get('takeprofit')):
                         self.close()
+                        print(f'> Close SHORT position at {self.data.close[0]}')
                         diff = self.data.close[0] - self.executed_price
                         if diff < 0:
                             print(f'Profit!')
