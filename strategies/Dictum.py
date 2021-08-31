@@ -82,6 +82,10 @@ class Dictum(bt.Strategy):
         # for k,v in self.params.items():
         #     print(f'{k} : {v}')
         # print()
+        self.dataopen1 = self.datas[1].open
+        self.dataclose1 = self.datas[1].close
+        self.datalow1 = self.datas[1].low
+        self.datahigh1 = self.datas[1].high
         self.dataopen = self.datas[0].open
         self.dataclose = self.datas[0].close
         self.datalow = self.datas[0].low
@@ -115,6 +119,8 @@ class Dictum(bt.Strategy):
                 amount_to_invest = (self.params.get('risk') * self.broker.cash)
                 self.size = round((amount_to_invest / self.dataclose[0]), 3)
                 self.log(f"SIGNAL NOTICE: Buy {self.size} shares of {self.params.get('ticker')} at {self.data.close[0]}")
+                self.log(self.dataopen1[0])
+                self.log(self.dataopen[0])
                 self.buy(size=self.size)
 
             if self.params.get('short_positions'):

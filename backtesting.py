@@ -115,6 +115,8 @@ if __name__ == '__main__':
                 feed = bt.feeds.PandasData(dataname=price_series)
                 cerebro.adddata(feed)
 
+                cerebro.resampledata(feed, timeframe = bt.TimeFrame.Minutes, compression = 60)
+
                 # Add Strategy or Optimizer according to parameter input
                 if not(optimizer):
                     cerebro.addstrategy(strategies[args.strategy],params = strategy_settings)
