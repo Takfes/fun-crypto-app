@@ -1,7 +1,10 @@
 
 strategy_settings_dictionary = {
     
-    'ma':{},
+    'ma' : {
+        'fast' : [15,25],
+        'slow' : 30
+    },
 
     'macd':{},
     
