@@ -32,7 +32,7 @@ optimizer = False
 
 def parse_user_input():
     parser = argparse.ArgumentParser()
-    parser.add_argument('type',help="what kind of asset : ['stock','crypto','crypto15','futures15']",type=str)
+    parser.add_argument('type',help="what kind of asset : ['stock','crypto','crypto15','futures15','futures1']",type=str)
     parser.add_argument('symbol',help='which symbol to test',type=str)
     parser.add_argument('strategy',help=f'which strategy to test : {list(strategies.keys())}',type=str)
     parser.add_argument('cash',help='set cash amount',type=str)
@@ -50,15 +50,18 @@ def print_arguments(args):
 def get_price_series(type, symbol, con):
     if type == 'stock':
         sql_string = f"SELECT * FROM stockdaily WHERE symbol = '{symbol}' ORDER BY datetime"
+        price_series = pd.read_sql(sql_string,con).assign(datetime = lambda x : pd.to_datetime(x.datetime)).set_index('datetime')
     elif type == 'crypto':
         sql_string = f"SELECT * FROM cryptodaily WHERE symbol = '{symbol}' ORDER BY datetime"
+        price_series = pd.read_sql(sql_string,con).assign(datetime = lambda x : pd.to_datetime(x.datetime)).set_index('datetime')
     elif type == 'crypto15':
         sql_string = f"SELECT * FROM crypto WHERE symbol = '{symbol}' ORDER BY datetime"
+        price_series = pd.read_sql(sql_string,con).assign(datetime = lambda x : pd.to_datetime(x.datetime)).set_index('datetime')
     elif type == 'futures15':
         sql_string = f"SELECT * FROM futures15 WHERE symbol = '{symbol}' and openTime >= '2021-07-01' and openTime < '2021-08-13 15:30:00' ORDER BY openTimets"
-    if type != 'futures15':
-        price_series = pd.read_sql(sql_string,con).assign(datetime = lambda x : pd.to_datetime(x.datetime)).set_index('datetime')
-    else:
+        price_series = pd.read_sql(sql_string,con).assign(openTime = lambda x : pd.to_datetime(x.openTime)).set_index('openTime')
+    elif type == 'futures1':
+        sql_string = f"SELECT * FROM futures1 WHERE symbol = '{symbol}' ORDER BY openTimets"
         price_series = pd.read_sql(sql_string,con).assign(openTime = lambda x : pd.to_datetime(x.openTime)).set_index('openTime')
     return price_series
 
@@ -80,7 +83,7 @@ if __name__ == '__main__':
             optimizer = True
             print(f'OPTIMIZER IS NOW OPEN')
 
-    try :        
+    try:
         con = sqlite3.connect(config.DB_NAME)
         # price_series = get_price_series(type,symbol,con)
         price_series = get_price_series(args.type,args.symbol,con)
@@ -111,31 +114,57 @@ if __name__ == '__main__':
                 # cerebro.resampledata(feed, timeframe = bt.TimeFrame.Minutes, compression = 60)
 
                 # Add Strategy or Optimizer according to parameter input
-                if not(optimizer):
+                if not optimizer:
                     
                     if args.strategy == 'ma':
                         cerebro.addstrategy(
                             strategies[args.strategy],
-                            symbol = args.symbol,
-                            risk = args.risk,
-                            fast = strategy_settings.get('fast'),
-                            slow = strategy_settings.get('slow')
+                            symbol=args.symbol,
+                            risk=args.risk,
+                            cash=args.cash,
+                            fast=strategy_settings.get('fast'),
+                            slow=strategy_settings.get('slow')
                                             )
                     elif args.strategy == 'dic':
-                        pass
+                        cerebro.addstrategy(
+                            strategies[args.strategy],
+                            symbol=args.symbol,
+                            risk=args.risk,
+                            cash=args.cash,
+                            wma_period=strategy_settings.get('wma_period'),
+                            stoploss=strategy_settings.get('stoploss'),
+                            takeprofit=strategy_settings.get('takeprofit'),
+                            short_positions=strategy_settings.get('short_positions'),
+                            period=strategy_settings.get('period'),
+                            factor=strategy_settings.get('factor'),
+                            multiplier=strategy_settings.get('multiplier')
+                            )
                                             
-                else :
+                else:
                     
                     if args.strategy == 'ma':
                         cerebro.optstrategy(
                             strategies[args.strategy],
-                            symbol = args.symbol,
-                            risk = args.risk,
-                            fast = strategy_settings.get('fast'),
-                            slow = strategy_settings.get('slow')
+                            symbol=args.symbol,
+                            risk=args.risk,
+                            cash=args.cash,
+                            fast=strategy_settings.get('fast'),
+                            slow=strategy_settings.get('slow')
                             )
                     elif args.strategy == 'dic':
-                        pass
+                        cerebro.optstrategy(
+                            strategies[args.strategy],
+                            symbol=args.symbol,
+                            risk=args.risk,
+                            cash=args.cash,
+                            wma_period=strategy_settings.get('wma_period'),
+                            stoploss=strategy_settings.get('stoploss'),
+                            takeprofit=strategy_settings.get('takeprofit'),
+                            short_positions=strategy_settings.get('short_positions'),
+                            period=strategy_settings.get('period'),
+                            factor=strategy_settings.get('factor'),
+                            multiplier=strategy_settings.get('multiplier')
+                            )
                     
                     
                 # Add Analyzer
@@ -165,7 +194,7 @@ if __name__ == '__main__':
                 # print('Trade Analyzer:', H.analyzers.mytradeanalyzer.get_analysis())
                 # print('Transactions:', H.analyzers.mytransactions.get_analysis())
 
-                if not(optimizer):
+                if not optimizer:
                     
                     # Basic Results
                     end_portfolio_value = cerebro.broker.getvalue()
