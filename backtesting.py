@@ -104,6 +104,10 @@ if __name__ == '__main__':
             else:
                 
                 # initiate cerebro
+                #TODO check quicknotify
+                # cerebro = bt.Cerebro(quicknotify=True)
+                # check cheat_on_open
+                # cerebro = bt.Cerebro(cheat_on_open=True)
                 cerebro = bt.Cerebro()
                 cerebro.broker.setcash(int(args.cash))
                 start_portfolio_value = cerebro.broker.getvalue()
@@ -111,8 +115,9 @@ if __name__ == '__main__':
                 # Add Dataset(s)
                 feed = bt.feeds.PandasData(dataname=price_series)
                 cerebro.adddata(feed)
+                # TODO resample and use 1min timeframe to find proper exits
                 #cerebro.resampledata(feed, timeframe = bt.TimeFrame.Minutes, compression = 15)
-
+                # TODO make the optimizer run for lists of symbols and settings and return with results per combination
                 # Add Strategy or Optimizer according to parameter input
                 if not optimizer:
                     
@@ -202,7 +207,7 @@ if __name__ == '__main__':
                     print(f'\nStarting Portfolio Value: {start_portfolio_value:.2f}')
                     print(f'Final Portfolio Value: {end_portfolio_value:.2f}')
                     print(f'PnL: {pnl:.2f} - {(pnl/end_portfolio_value)*100:.2f}%')
-                    #TODO print(f'Accuracy Rate: {accuracy_rate}/{total_signals} - {(accuracy_rate/total_signals)*100:.2f}%')
+                    # TODO print(f'Accuracy Rate: {accuracy_rate}/{total_signals} - {(accuracy_rate/total_signals)*100:.2f}%')
                     
                     # Plot Results
                     cerebro.plot()

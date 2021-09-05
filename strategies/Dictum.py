@@ -5,6 +5,23 @@ import sys
 
 debug = False
 
+#TODO check quicknotify, cheat-on-open for entry and exit in the same bar
+# ===
+# quicknotify: Broker notifications are delivered right before the delivery of the next prices. For backtesting this has
+# no implications, but with live brokers a notification can take place long before the bar is delivered. When set to
+# True notifications will be delivered as soon as possible (see qcheck in live feeds)
+# ===
+# cheat-on-open: The next_open method of strategies will be called. This happens before next and before the broker has
+# had a chance to evaluate orders. The indicators have not yet been recalculated. This allows issuing an orde which
+# takes into account the indicators of the previous day but uses the open price for stake calculations
+# ===
+# For cheat_on_open order execution, it is also necessary to make the call cerebro.broker.set_coo(True) or instantite a
+# broker with BackBroker(coo=True) (where coo stands for cheat-on-open) or set the broker_coo parameter to True. Cerebro
+# will do it automatically unless disabled below.
+# ===
+# broker_coo (default: True)
+# This will automatically invoke the set_coo method of the broker with True to activate cheat_on_open execution. Will
+# only do it if cheat_on_open is also True
 
 # Custom Indicator
 
