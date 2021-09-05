@@ -8,22 +8,14 @@ from backtesting_settings import strategy_settings_dictionary
 
 from strategies.GoldenCross import GoldenCross
 from strategies.BuyHold import BuyHold
-from strategies.MACDCross import MACDCross
-from strategies.Stochastic import Stochastic
-from strategies.TripleFoo import TripleFoo
 from strategies.BuyDip import BuyDip
-from strategies.BearX import BearX
 from strategies.Dictum import Dictum
 from strategies.TripleH import TripleH
 
 strategies = {
     'ma':GoldenCross,
-    'macd':MACDCross,
     'bnh':BuyHold,
-    'stoc':Stochastic,
-    'triple':TripleFoo,
     'dip':BuyDip,
-    'bearx':BearX,
     'dic':Dictum,
     '3h':TripleH
 }
@@ -88,6 +80,7 @@ if __name__ == '__main__':
         # price_series = get_price_series(type,symbol,con)
         price_series = get_price_series(args.type,args.symbol,con)
         print(f'> backtesting.py : fetched {price_series.shape[0]} rows for {args.symbol}')
+        print(f'\n====================================\n')
     except Exception as e:
         print(f'DB CONNECTION ERROR')
         print(e)
@@ -141,6 +134,9 @@ if __name__ == '__main__':
                             )
                                             
                 else:
+                        
+                    # add output file
+                    cerebro.addwriter(bt.WriterFile, csv=True)
                     
                     if args.strategy == 'ma':
                         cerebro.optstrategy(
