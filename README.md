@@ -1,5 +1,5 @@
 ### How to run strategy
-> python backtesting.py futures15 ETHUSDT dic 10000 0.5
+> python backtesting.py futures1 ETHUSDT dic 10000 0.5
 
 ### Strategy Options
 * futures15 -> table name

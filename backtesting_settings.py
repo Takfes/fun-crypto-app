@@ -20,8 +20,8 @@ strategy_settings_dictionary = {
     
     'dic':{
         'wma_period' : 300,
-        'stoploss' : 0.08,
-        'takeprofit' : 0.08,
+        'stoploss' : 0.035,
+        'takeprofit' : 0.015,
         'short_positions' : 1,
         'period' : 110,
         'factor' : 0.618,

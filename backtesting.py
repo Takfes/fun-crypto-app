@@ -61,7 +61,7 @@ def get_price_series(type, symbol, con):
         sql_string = f"SELECT * FROM futures15 WHERE symbol = '{symbol}' and openTime >= '2021-07-01' and openTime < '2021-08-13 15:30:00' ORDER BY openTimets"
         price_series = pd.read_sql(sql_string,con).assign(openTime = lambda x : pd.to_datetime(x.openTime)).set_index('openTime')
     elif type == 'futures1':
-        sql_string = f"SELECT * FROM futures1 WHERE symbol = '{symbol}' ORDER BY openTimets"
+        sql_string = f"SELECT * FROM futures1 WHERE symbol = '{symbol}' and openTime >= '2021-08-10' and openTime < '2021-08-13 15:30:00' ORDER BY openTimets"
         price_series = pd.read_sql(sql_string,con).assign(openTime = lambda x : pd.to_datetime(x.openTime)).set_index('openTime')
     return price_series
 
@@ -111,7 +111,7 @@ if __name__ == '__main__':
                 # Add Dataset(s)
                 feed = bt.feeds.PandasData(dataname=price_series)
                 cerebro.adddata(feed)
-                # cerebro.resampledata(feed, timeframe = bt.TimeFrame.Minutes, compression = 60)
+                #cerebro.resampledata(feed, timeframe = bt.TimeFrame.Minutes, compression = 15)
 
                 # Add Strategy or Optimizer according to parameter input
                 if not optimizer:
@@ -199,9 +199,10 @@ if __name__ == '__main__':
                     # Basic Results
                     end_portfolio_value = cerebro.broker.getvalue()
                     pnl = end_portfolio_value - start_portfolio_value
-                    print(f'Starting Portfolio Value: {start_portfolio_value:2f}')
-                    print(f'Final Portfolio Value: {end_portfolio_value:2f}')
-                    print(f'PnL: {pnl:.2f}')
+                    print(f'\nStarting Portfolio Value: {start_portfolio_value:.2f}')
+                    print(f'Final Portfolio Value: {end_portfolio_value:.2f}')
+                    print(f'PnL: {pnl:.2f} - {(pnl/end_portfolio_value)*100:.2f}%')
+                    #TODO print(f'Accuracy Rate: {accuracy_rate}/{total_signals} - {(accuracy_rate/total_signals)*100:.2f}%')
                     
                     # Plot Results
                     cerebro.plot()
