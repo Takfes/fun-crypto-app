@@ -53,7 +53,7 @@ def get_price_series(type, symbol, con):
         sql_string = f"SELECT * FROM futures15 WHERE symbol = '{symbol}' and openTime >= '2021-07-01' and openTime < '2021-08-13 15:30:00' ORDER BY openTimets"
         price_series = pd.read_sql(sql_string,con).assign(openTime = lambda x : pd.to_datetime(x.openTime)).set_index('openTime')
     elif type == 'futures1':
-        sql_string = f"SELECT * FROM futures1 WHERE symbol = '{symbol}' and openTime >= '2021-08-25' ORDER BY openTimets"
+        sql_string = f"SELECT * FROM futures1  WHERE symbol = '{symbol}' and openTime >= '2021-07-01' and openTime < '2021-08-13 15:30:00' ORDER BY openTimets"
         price_series = pd.read_sql(sql_string,con).assign(openTime = lambda x : pd.to_datetime(x.openTime)).set_index('openTime')
     return price_series
 
@@ -97,7 +97,7 @@ if __name__ == '__main__':
             else:
                 
                 # initiate cerebro
-                #TODO check quicknotify
+                # TODO check quicknotify
                 # cerebro = bt.Cerebro(quicknotify=True)
                 # check cheat_on_open
                 # cerebro = bt.Cerebro(cheat_on_open=True)
