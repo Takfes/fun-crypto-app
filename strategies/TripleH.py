@@ -82,7 +82,7 @@ class TripleH(bt.Strategy):
     def __init__(self):
 
         self.dataclose = self.datas[0].close
-        self.ATR = bt.indicators.ATR(self.data, period=self.p.atr_period)
+        self.ATR = bt.indicators.ATR(self.data, period=self.p.atr_period)a
         # pat = self.pat = PAT(self.data)
         # pat.plotinfo.subplot = False
 
