@@ -47,6 +47,7 @@ class DICK(bt.Indicator):
         hlcp = (highp + lowp + closep) / 3.0
         sumprodp = hlcp * volumep
         vwma = sum(sumprodp) / sum(volumep)
+        # TODO Add RSI for emergency exit
         # add vwma line
         self.lines.vwma[0] = vwma
         # calculate stdev hlc

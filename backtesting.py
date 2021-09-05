@@ -111,7 +111,9 @@ if __name__ == '__main__':
                 cerebro.adddata(feed)
                 cerebro.broker.setcommission(commission=0.001, leverage=10)
                 if args.type=='futures1':
-                    cerebro.resampledata(feed, timeframe = bt.TimeFrame.Minutes, compression = 15)
+                    cerebro.resampledata(feed, timeframe=bt.TimeFrame.Minutes, compression=15)
+                    # TODO Resample also to 60 minutes for emergency exits
+                    # cerebro.resampledata(feed, timeframe=bt.TimeFrame.Minutes, compression=60)
 
                 # TODO make the optimizer run for lists of symbols and settings and return with results per combination
                 # Add Strategy or Optimizer according to parameter input
