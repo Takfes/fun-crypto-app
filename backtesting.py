@@ -141,7 +141,7 @@ if __name__ == '__main__':
                 else:
                         
                     # add output file
-                    cerebro.addwriter(bt.WriterFile, csv=True)
+                    # cerebro.addwriter(bt.WriterFile, csv=True)
                     
                     if args.strategy == 'ma':
                         cerebro.optstrategy(
@@ -169,9 +169,9 @@ if __name__ == '__main__':
                     
                     
                 # Add Analyzer
-                # cerebro.addanalyzer(bt.analyzers.DrawDown, _name='mydrawdown')
-                # cerebro.addanalyzer(bt.analyzers.SharpeRatio, _name='mysharpe')
-                # cerebro.addanalyzer(bt.analyzers.Returns, _name='myreturns')
+                cerebro.addanalyzer(bt.analyzers.DrawDown, _name='mydrawdown')
+                cerebro.addanalyzer(bt.analyzers.SharpeRatio, _name='mysharpe')
+                cerebro.addanalyzer(bt.analyzers.Returns, _name='myreturns')
                 # cerebro.addanalyzer(bt.analyzers.PositionsValue, _name='mypositionsvalue')
                 # cerebro.addanalyzer(bt.analyzers.PyFolio, _name='mypyfolio')
                 # cerebro.addanalyzer(bt.analyzers.PeriodStats, _name='myperiodstats')
@@ -185,9 +185,9 @@ if __name__ == '__main__':
                 
                 # Analyzer Results
                 # https://www.backtrader.com/docu/analyzers-reference/
-                # print('Draw Down:', H.analyzers.mydrawdown.get_analysis())
-                # print('Sharpe Ratio:', H.analyzers.mysharpe.get_analysis())
-                # print('Returns:', H.analyzers.myreturns.get_analysis())
+                print('Draw Down:', H.analyzers.mydrawdown.get_analysis())
+                print('Sharpe Ratio:', H.analyzers.mysharpe.get_analysis())
+                print('Returns:', H.analyzers.myreturns.get_analysis())
                 # print('Position Value:', H.analyzers.mypositionsvalue.get_analysis())
                 # print('PyFolio:', H.analyzers.mypyfolio.get_analysis())
                 # print('Period Stats:', H.analyzers.myperiodstats.get_analysis())

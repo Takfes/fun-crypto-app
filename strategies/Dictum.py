@@ -169,6 +169,7 @@ class Dictum(bt.Strategy):
 
         if not self.position:
 
+            # HIGHER TIMEFRAME SIGNALS
             # OPEN POSITIONS
             # OPEN LONG
             if (self.dataclose[0] > self.dick.lines.bbt) and (self.dataclose[0] > self.wma):

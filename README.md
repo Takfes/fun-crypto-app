@@ -11,8 +11,16 @@
 ### Additional Strategy Parameters in 
 > backtesting_strategies.py
 
-### TODOs
+### TODOs TAKIS
 1. optresults - output - analyzers - paraller execution
 2. add writer to opt results
 3. find out how to test multiple strategies on a single datafeed
 4. find out how to test and optimize one strategy over multiple datafees
+5. resample
+
+### TODOs PREKS
+1. stoploss risk leverage
+2. arguments between strategies - what is per strategy what is across strategies
+3. consistency between arguments - stoploss vs risk input
+4. cheat on close quicknotify
+5. what can mits check
