@@ -22,7 +22,7 @@ sql_create_asset_table = """CREATE TABLE IF NOT EXISTS {} (
                             UNIQUE(openTimets,symbol)
                         );""".format(config.DB_ASSET_TABLE_FUTURES_1)
                         
-sql_create_asset_table_index = """CREATE INDEX {} ON {} (openTimets,symbol);""".format(config.DB_ASSET_TABLE_FUTURES_1_INDEX,config.DB_ASSET_TABLE_FUTURES_15)
+sql_create_asset_table_index = """CREATE INDEX {} ON {} (openTimets,symbol);""".format(config.DB_ASSET_TABLE_FUTURES_1_INDEX,config.DB_ASSET_TABLE_FUTURES_1)
 
 if __name__ == '__main__':
     

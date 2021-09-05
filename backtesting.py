@@ -53,7 +53,7 @@ def get_price_series(type, symbol, con):
         sql_string = f"SELECT * FROM futures15 WHERE symbol = '{symbol}' and openTime >= '2021-07-01' and openTime < '2021-08-13 15:30:00' ORDER BY openTimets"
         price_series = pd.read_sql(sql_string,con).assign(openTime = lambda x : pd.to_datetime(x.openTime)).set_index('openTime')
     elif type == 'futures1':
-        sql_string = f"SELECT * FROM futures1 WHERE symbol = '{symbol}' and openTime >= '2021-08-10' and openTime < '2021-08-13 15:30:00' ORDER BY openTimets"
+        sql_string = f"SELECT * FROM futures1 WHERE symbol = '{symbol}' and openTime >= '2021-08-25' ORDER BY openTimets"
         price_series = pd.read_sql(sql_string,con).assign(openTime = lambda x : pd.to_datetime(x.openTime)).set_index('openTime')
     return price_series
 
@@ -108,8 +108,9 @@ if __name__ == '__main__':
                 # Add Dataset(s)
                 feed = bt.feeds.PandasData(dataname=price_series)
                 cerebro.adddata(feed)
-                # TODO resample and use 1min timeframe to find proper exits
-                #cerebro.resampledata(feed, timeframe = bt.TimeFrame.Minutes, compression = 15)
+                if args.type=='futures1':
+                    cerebro.resampledata(feed, timeframe = bt.TimeFrame.Minutes, compression = 15)
+
                 # TODO make the optimizer run for lists of symbols and settings and return with results per combination
                 # Add Strategy or Optimizer according to parameter input
                 if not optimizer:
@@ -169,9 +170,9 @@ if __name__ == '__main__':
                     
                     
                 # Add Analyzer
-                cerebro.addanalyzer(bt.analyzers.DrawDown, _name='mydrawdown')
-                cerebro.addanalyzer(bt.analyzers.SharpeRatio, _name='mysharpe')
-                cerebro.addanalyzer(bt.analyzers.Returns, _name='myreturns')
+                # cerebro.addanalyzer(bt.analyzers.DrawDown, _name='mydrawdown')
+                # cerebro.addanalyzer(bt.analyzers.SharpeRatio, _name='mysharpe')
+                # cerebro.addanalyzer(bt.analyzers.Returns, _name='myreturns')
                 # cerebro.addanalyzer(bt.analyzers.PositionsValue, _name='mypositionsvalue')
                 # cerebro.addanalyzer(bt.analyzers.PyFolio, _name='mypyfolio')
                 # cerebro.addanalyzer(bt.analyzers.PeriodStats, _name='myperiodstats')
@@ -185,9 +186,9 @@ if __name__ == '__main__':
                 
                 # Analyzer Results
                 # https://www.backtrader.com/docu/analyzers-reference/
-                print('Draw Down:', H.analyzers.mydrawdown.get_analysis())
-                print('Sharpe Ratio:', H.analyzers.mysharpe.get_analysis())
-                print('Returns:', H.analyzers.myreturns.get_analysis())
+                # print('Draw Down:', H.analyzers.mydrawdown.get_analysis())
+                # print('Sharpe Ratio:', H.analyzers.mysharpe.get_analysis())
+                # print('Returns:', H.analyzers.myreturns.get_analysis())
                 # print('Position Value:', H.analyzers.mypositionsvalue.get_analysis())
                 # print('PyFolio:', H.analyzers.mypyfolio.get_analysis())
                 # print('Period Stats:', H.analyzers.myperiodstats.get_analysis())
@@ -206,7 +207,7 @@ if __name__ == '__main__':
                     # TODO print(f'Accuracy Rate: {accuracy_rate}/{total_signals} - {(accuracy_rate/total_signals)*100:.2f}%')
                     
                     # Plot Results
-                    # cerebro.plot()
+                    cerebro.plot()
     
     except Exception as e:
         print('Error in cerebro section ; EXITING ...')

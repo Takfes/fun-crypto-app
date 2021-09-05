@@ -84,22 +84,40 @@ class Dictum(bt.Strategy):
         ('period', 110),
         ('factor', 0.618),
         ('multiplier', 3.0),
-        ('leverage',10)
         )
 
     def __init__(self):
 
+        # settings
         self.params.printlog = True
-        self.dataopen = self.datas[0].open
-        self.dataclose = self.datas[0].close
-        self.datalow = self.datas[0].low
-        self.datahigh = self.datas[0].high
         self.starting_cash = self.broker.getvalue()
         self.accuracy_rate = 0
         self.total_signals = 0
-        self.wma = bt.indicators.WeightedMovingAverage(self.data, period=self.params.wma_period)
-        dick = self.dick = DICK(self.data)
+        
+        # 1 minute data
+        self.dataopen = self.datas[0].open
+        self.datahigh = self.datas[0].high
+        self.datalow = self.datas[0].low
+        self.dataclose = self.datas[0].close
+        
+        print('@@@1')
+        # 15 minute data
+        self.do = self.datas[1].open
+        self.dh = self.datas[1].high
+        self.dl = self.datas[1].low
+        self.dc = self.datas[1].close
+        
+        print('@@@2')
+        # indicators
+        self.wma = bt.indicators.WeightedMovingAverage(self.datas[1], period=self.params.wma_period)
+        dick = self.dick = DICK(self.datas[1])
         dick.plotinfo.subplot = False
+        
+        print('@@@3')
+        # signals
+        self.signal_long = (self.dc[0] > self.dick.lines.bbt) and (self.dc[0] > self.wma)
+        self.signal_short = (self.dc[0] < self.dick.lines.bbb) and (self.dc[0] < self.wma)
+        print('###3')
         
     def log(self, txt, dt=None, doprint=False):
         if self.params.printlog or doprint:
@@ -111,18 +129,11 @@ class Dictum(bt.Strategy):
         # TAKIS
         # amount_to_invest = (self.params.risk * self.broker.cash)
         # self.size = round((amount_to_invest / self.datas[0].close), 3)
-        
+        print('@@@5')
         # PREKS
         amount_to_invest = (self.params.risk * self.starting_cash)/self.params.stoploss # ALMOST FIXED AMOUNT OF LOSS
         # amount_to_invest = (self.params.risk * self.broker.cash)/self.params.stoploss # AMOUNT OF LOSS CHANGES OVER TIME ACCORDING TO CURRENT CASH
-        self.size = round((amount_to_invest / self.datas[0].close), 3)
-
-    def notify_trade(self, trade):
-            if not trade.isclosed:
-                return
-            self.log('(7) OPERATION PROFIT, GROSS %.2f, NET %.2f' %
-                    (trade.pnl, trade.pnlcomm))
-            self.log(f'{50*"-"}\n')
+        self.size = round((amount_to_invest / self.dc), 3)
 
     def notify_order(self, order):
         if order.status in [order.Submitted, order.Accepted]:
@@ -164,15 +175,25 @@ class Dictum(bt.Strategy):
                         self.log(f"(6) ACCURACY RATE {self.accuracy_rate}/{self.total_signals} or {(self.accuracy_rate/self.total_signals)*100:.2f}%")
             self.bar_executed = len(self)
         self.order = None
+        
+    def notify_trade(self, trade):
+        if not trade.isclosed:
+            return
+        self.log('(7) OPERATION PROFIT, GROSS %.2f, NET %.2f' %
+                (trade.pnl, trade.pnlcomm))
+        self.log(f'{50*"-"}\n')
 
     def next(self):
+        
+        print('@@@4')
+        self.log(self.dataclose[0])
+        self.log(self.dc[0])
 
+        # OPEN POSITIONS
         if not self.position:
-
-            # HIGHER TIMEFRAME SIGNALS
-            # OPEN POSITIONS
             # OPEN LONG
-            if (self.dataclose[0] > self.dick.lines.bbt) and (self.dataclose[0] > self.wma):
+            if self.signal_long:
+            # if (self.dataclose[0] > self.dick.lines.bbt) and (self.dataclose[0] > self.wma):
                 self.sizer()
                 self.log(f"(1) SIGNAL NOTICE: Buy {self.size} shares of {self.params.symbol} at {self.data.close[0]}")
                 # self.buy(size=self.size)
@@ -182,16 +203,17 @@ class Dictum(bt.Strategy):
 
             # OPEN SHORT
             if self.params.short_positions:
-                if (self.dataclose[0] < self.dick.lines.bbb) and (self.dataclose[0] < self.wma):
+                if self.signal_short:
+                # if (self.dataclose[0] < self.dick.lines.bbb) and (self.dataclose[0] < self.wma):
                     self.sizer()
                     self.log(f"(1) SIGNAL NOTICE: Sell {self.size} shares of {self.params.symbol} at {self.data.close[0]}")
                     # self.sell(size=self.size)
                     self.currency_format = str(self.data.close[0])[::-1].find('.')
                     self.sell(exectype=bt.Order.Market, size=self.size)
                     self.wallet = self.broker.getvalue()
-
+        
+        # CLOSE POSITIONS
         else:
-            # CLOSE POSITIONS
             # CLOSE LONG
             if self.position.size > 0:
                 # TAKE PROFIT
@@ -223,6 +245,6 @@ class Dictum(bt.Strategy):
                         self.log(f'(3) CLOSE SHORT position at {self.executed_price * (1 + self.params.stoploss)}')
                         self.profit_loss = "loss"
     def stop(self):
-            self.log(f'\n{50*"+"}\n')
-            self.log(f'STOP RESULTS : \n\n* stoploss : {self.p.stoploss}\n* takeprofit : {self.p.takeprofit} \n* short_positions : {self.p.short_positions} {self.broker.getvalue()-self.starting_cash}', doprint=True)
-            self.log(f'\n{50*"+"}\n')
+        self.log(f'\n{50*"+"}\n')
+        self.log(f'STOP RESULTS : \n\n* stoploss : {self.p.stoploss}\n* takeprofit : {self.p.takeprofit} \n* short_positions : {self.p.short_positions} {self.broker.getvalue()-self.starting_cash}', doprint=True)
+        self.log(f'\n{50*"+"}\n')
