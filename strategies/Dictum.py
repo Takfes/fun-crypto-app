@@ -83,12 +83,13 @@ class Dictum(bt.Strategy):
         ('short_positions',0),
         ('period', 110),
         ('factor', 0.618),
-        ('multiplier', 3.0)
+        ('multiplier', 3.0),
+        ('leverage',10)
         )
 
     def __init__(self):
 
-        self.params.printlog = False
+        self.params.printlog = True
         self.dataopen = self.datas[0].open
         self.dataclose = self.datas[0].close
         self.datalow = self.datas[0].low
@@ -101,22 +102,25 @@ class Dictum(bt.Strategy):
         dick.plotinfo.subplot = False
         
     def log(self, txt, dt=None, doprint=False):
-        ''' Logging function fot this strategy'''
         if self.params.printlog or doprint:
             dt = dt or self.datas[0].datetime.datetime(0)
             print('%s, %s' % (dt.isoformat(), txt))
 
     def sizer(self):
-        amount_to_invest = (self.params.risk * self.broker.cash)
+        
+        # TAKIS
+        # amount_to_invest = (self.params.risk * self.broker.cash)
+        # self.size = round((amount_to_invest / self.datas[0].close), 3)
+        
+        # PREKS
+        amount_to_invest = (self.params.risk * self.starting_cash)/self.params.stoploss # ALMOST FIXED AMOUNT OF LOSS
+        # amount_to_invest = (self.params.risk * self.broker.cash)/self.params.stoploss # AMOUNT OF LOSS CHANGES OVER TIME ACCORDING TO CURRENT CASH
         self.size = round((amount_to_invest / self.datas[0].close), 3)
-        # amount_to_invest = (self.params.risk * self.broker.cash)/self.params.stoploss
-        # size = self.size = round((amount_to_invest / self.datas[0].close), 3)
-        # return size
 
     def notify_trade(self, trade):
             if not trade.isclosed:
                 return
-            self.log('(6) OPERATION PROFIT, GROSS %.2f, NET %.2f' %
+            self.log('(7) OPERATION PROFIT, GROSS %.2f, NET %.2f' %
                     (trade.pnl, trade.pnlcomm))
             self.log(f'{50*"-"}\n')
 
@@ -135,12 +139,12 @@ class Dictum(bt.Strategy):
                         self.log(f"(5) CURRENT WALLET : {self.broker.getvalue()}")
                         self.accuracy_rate += 1
                         self.total_signals += 1
-                        self.log(f"Accuracy Rate : {self.accuracy_rate}/{self.total_signals} - {(self.accuracy_rate/self.total_signals)*100:.2f}%")
+                        self.log(f"(6) ACCURACY RATE {self.accuracy_rate}/{self.total_signals} or {(self.accuracy_rate/self.total_signals)*100:.2f}%")
                     elif self.profit_loss == "loss":
                         self.log(f'(4) BUY EXECUTED : {order.executed.price}. LOSS: {self.broker.getvalue() - self.wallet}')
                         self.log(f"(5) CURRENT WALLET : {self.broker.getvalue()}")
                         self.total_signals += 1
-                        self.log(f"Accuracy Rate : {self.accuracy_rate}/{self.total_signals} - {(self.accuracy_rate/self.total_signals)*100:.2f}%")
+                        self.log(f"(6) ACCURACY RATE {self.accuracy_rate}/{self.total_signals} or {(self.accuracy_rate/self.total_signals)*100:.2f}%")
             elif order.issell():
                 self.executed_price = order.executed.price
                 if self.position:
@@ -152,12 +156,12 @@ class Dictum(bt.Strategy):
                         self.log(f"(5) CURRENT WALLET : {self.broker.getvalue()}")
                         self.accuracy_rate += 1
                         self.total_signals += 1
-                        self.log(f"Accuracy Rate : {self.accuracy_rate}/{self.total_signals} - {(self.accuracy_rate/self.total_signals)*100:.2f}%")
+                        self.log(f"(6) ACCURACY RATE {self.accuracy_rate}/{self.total_signals} or {(self.accuracy_rate/self.total_signals)*100:.2f}%")
                     elif self.profit_loss == "loss":
                         self.log(f'(4) SELL EXECUTED : {order.executed.price}. LOSS: {self.broker.getvalue() - self.wallet}')
                         self.log(f"(5) CURRENT WALLET : {self.broker.getvalue()}")
                         self.total_signals += 1
-                        self.log(f"Accuracy Rate : {self.accuracy_rate}/{self.total_signals} - {(self.accuracy_rate/self.total_signals)*100:.2f}%")
+                        self.log(f"(6) ACCURACY RATE {self.accuracy_rate}/{self.total_signals} or {(self.accuracy_rate/self.total_signals)*100:.2f}%")
             self.bar_executed = len(self)
         self.order = None
 
@@ -165,19 +169,20 @@ class Dictum(bt.Strategy):
 
         if not self.position:
 
+            # OPEN POSITIONS
+            # OPEN LONG
             if (self.dataclose[0] > self.dick.lines.bbt) and (self.dataclose[0] > self.wma):
-                amount_to_invest = (self.params.risk * self.broker.cash)/self.params.stoploss
-                self.size = round((amount_to_invest / self.dataclose[0]), 3)
+                self.sizer()
                 self.log(f"(1) SIGNAL NOTICE: Buy {self.size} shares of {self.params.symbol} at {self.data.close[0]}")
                 # self.buy(size=self.size)
                 self.currency_format = str(self.data.close[0])[::-1].find('.')
                 self.buy(exectype=bt.Order.Market, size=self.size)
                 self.wallet = self.broker.getvalue()
 
+            # OPEN SHORT
             if self.params.short_positions:
                 if (self.dataclose[0] < self.dick.lines.bbb) and (self.dataclose[0] < self.wma):
-                    amount_to_invest = (self.params.risk * self.broker.cash)/self.params.stoploss
-                    self.size = round((amount_to_invest / self.dataclose[0]), 3)
+                    self.sizer()
                     self.log(f"(1) SIGNAL NOTICE: Sell {self.size} shares of {self.params.symbol} at {self.data.close[0]}")
                     # self.sell(size=self.size)
                     self.currency_format = str(self.data.close[0])[::-1].find('.')
@@ -185,29 +190,38 @@ class Dictum(bt.Strategy):
                     self.wallet = self.broker.getvalue()
 
         else:
+            # CLOSE POSITIONS
+            # CLOSE LONG
             if self.position.size > 0:
+                # TAKE PROFIT
                 if self.datahigh[0] >= self.executed_price * (1 + self.params.takeprofit):
                     # self.close()
                     self.sell(exectype=bt.Order.Limit, size=self.size, price=self.executed_price * (1 + self.params.takeprofit))
                     self.log(f'(3) CLOSE LONG position at {self.executed_price * (1 + self.params.takeprofit)}')
                     self.profit_loss = "profit"
+                # STOP LOSS
                 if self.datalow[0] <= self.executed_price * (1 - self.params.stoploss):
                     self.close()
                     # self.sell(exectype=bt.Order.Market, size=self.size)
                     self.log(f'(3) CLOSE LONG position at {self.executed_price * (1 - self.params.stoploss)}')
                     self.profit_loss = "loss"
 
+            # CLOSE SHORT
             if self.params.short_positions:
                 if self.position.size < 0:
+                    # TAKE PROFIT
                     if self.datalow[0] <= self.executed_price * (1 - self.params.takeprofit):
                         # self.close()
                         self.buy(exectype=bt.Order.Limit, size=self.size, price=self.executed_price * (1 - self.params.takeprofit))
                         self.log(f'(3) CLOSE SHORT position at {self.executed_price * (1 - self.params.takeprofit)}')
                         self.profit_loss = "profit"
+                    # STOP LOSS
                     if self.datahigh[0] >= self.executed_price * (1 + self.params.stoploss):
                         self.close()
                         # self.buy(exectype=bt.Order.Market, size=self.size)
                         self.log(f'(3) CLOSE SHORT position at {self.executed_price * (1 + self.params.stoploss)}')
                         self.profit_loss = "loss"
     def stop(self):
-            self.log(f'OPTIMIZATION RESULTS : \n* stoploss : {self.p.stoploss}\n* takeprofit : {self.p.takeprofit} \n* short_positions : {self.p.short_positions} {self.broker.getvalue()-self.starting_cash}', doprint=True)
+            self.log(f'\n{50*"+"}\n')
+            self.log(f'STOP RESULTS : \n\n* stoploss : {self.p.stoploss}\n* takeprofit : {self.p.takeprofit} \n* short_positions : {self.p.short_positions} {self.broker.getvalue()-self.starting_cash}', doprint=True)
+            self.log(f'\n{50*"+"}\n')

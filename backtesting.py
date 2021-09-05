@@ -206,7 +206,7 @@ if __name__ == '__main__':
                     # TODO print(f'Accuracy Rate: {accuracy_rate}/{total_signals} - {(accuracy_rate/total_signals)*100:.2f}%')
                     
                     # Plot Results
-                    cerebro.plot()
+                    # cerebro.plot()
     
     except Exception as e:
         print('Error in cerebro section ; EXITING ...')
