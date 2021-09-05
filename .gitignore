@@ -6,3 +6,4 @@ logs/
 __pycache__/
 !data/*.dvc
 .DS_Store
+apikeys.py
