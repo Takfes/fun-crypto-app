@@ -29,5 +29,15 @@ strategy_settings_dictionary = {
         'multiplier' : 3
     },
     
-    '3h':{}
+    '3h':{
+        'stoploss' : 0.025,#list(np.round(np.arange(0.01,0.06,0.01),3)),
+        'takeprofit' : 0.025,#list(np.round(np.arange(0.01,0.06,0.01),3)),
+        'short_positions' : 1,#[0,1],
+        'factor' : 6.5,
+        'atr_period' : 170,
+        'pivot_period' : 24
+    }
+
+
+
 }

@@ -87,6 +87,8 @@ class Dictum(bt.Strategy):
     def __init__(self):
 
         # settings
+        self.signal_number = 1
+        self.currency_format = 6
         self.params.printlog = True
         self.starting_cash = self.broker.getvalue()
         self.accuracy_rate = 0
@@ -117,13 +119,15 @@ class Dictum(bt.Strategy):
     def sizer(self):
         
         # TAKIS
-        # amount_to_invest = (self.params.risk * self.broker.cash)
+        # amount_to_invest = self.broker.cash * self.params.risk
         # self.size = round((amount_to_invest / self.datas[0].close), 3)
     
         # PREKS
-        amount_to_invest = (self.params.risk * self.starting_cash)/self.params.stoploss # ALMOST FIXED AMOUNT OF LOSS
-        # amount_to_invest = (self.params.risk * self.broker.cash)/self.params.stoploss # AMOUNT OF LOSS CHANGES OVER TIME ACCORDING TO CURRENT CASH
-        self.size = round((amount_to_invest / self.dc[0]), 3)
+        amount_to_invest = self.starting_cash * (self.params.risk / self.params.stoploss)  # ALMOST FIXED AMOUNT OF LOSS
+        # amount_to_invest = self.broker.cash * (self.params.risk / self.params.stoploss)  # AMOUNT OF LOSS CHANGES OVER TIME ACCORDING TO CURRENT CASH
+        # amount_to_invest = self.broker.cash  # ENTER WITH 100% CASH ON EVERY SIGNAL
+        self.currency_format = str(self.dc[0])[::-1].find('.')
+        self.size = round((amount_to_invest / self.dc[0]), self.currency_format)
 
     def notify_order(self, order):
         if order.status in [order.Submitted, order.Accepted]:
@@ -135,20 +139,20 @@ class Dictum(bt.Strategy):
                 # IF THERE IS OPEN POSITION (just received open signal and position opened)
                 if self.position:
                     self.entry_price = self.executed_price
-                    self.log(f'(2) BUY EXECUTED : {self.entry_price}')
+                    self.log(f'(2) BUY EXECUTED : {self.entry_price:.2f}')
                 # IF THERE IS NO OPEN POSITION (just received close signal and position closed)
                 else:
                     # IF POSITION CLOSED WITH PROFIT
                     if self.profit_loss == "profit":
-                        self.log(f'(4) BUY EXECUTED : {order.executed.price}. PROFIT: {self.broker.getvalue() - self.wallet}')
-                        self.log(f"(5) CURRENT WALLET : {self.broker.getvalue()}")
+                        self.log(f'(4) BUY EXECUTED : {order.executed.price:.2f}. PROFIT: {self.broker.getvalue() - self.wallet:.2f}')
+                        self.log(f"(5) CURRENT WALLET : {self.broker.getvalue():.2f}")
                         self.accuracy_rate += 1
                         self.total_signals += 1
                         self.log(f"(6) ACCURACY RATE {self.accuracy_rate}/{self.total_signals} or {(self.accuracy_rate/self.total_signals)*100:.2f}%")
                     # IF POSITION CLOSED WITH LOSS
                     elif self.profit_loss == "loss":
-                        self.log(f'(4) BUY EXECUTED : {order.executed.price}. LOSS: {self.broker.getvalue() - self.wallet}')
-                        self.log(f"(5) CURRENT WALLET : {self.broker.getvalue()}")
+                        self.log(f'(4) BUY EXECUTED : {order.executed.price:.2f}. LOSS: {self.broker.getvalue() - self.wallet:.2f}')
+                        self.log(f"(5) CURRENT WALLET : {self.broker.getvalue():.2f}")
                         self.total_signals += 1
                         self.log(f"(6) ACCURACY RATE {self.accuracy_rate}/{self.total_signals} or {(self.accuracy_rate/self.total_signals)*100:.2f}%")
             # SHORT POSITIONS
@@ -157,20 +161,20 @@ class Dictum(bt.Strategy):
                 # IF THERE IS OPEN POSITION (just received open signal and position opened)
                 if self.position:
                     self.entry_price = order.executed.price
-                    self.log(f'(2) SELL EXECUTED : {order.executed.price}')
+                    self.log(f'(2) SELL EXECUTED : {order.executed.price:.2f}')
                 # IF THERE IS NO OPEN POSITION (just received close signal and position closed)
                 else:
                     # IF POSITION CLOSED WITH PROFIT
                     if self.profit_loss == "profit":
-                        self.log(f'(4) SELL EXECUTED : {order.executed.price}. PROFIT: {self.broker.getvalue() - self.wallet}')
-                        self.log(f"(5) CURRENT WALLET : {self.broker.getvalue()}")
+                        self.log(f'(4) SELL EXECUTED : {order.executed.price:.2f}. PROFIT: {self.broker.getvalue() - self.wallet:.2f}')
+                        self.log(f"(5) CURRENT WALLET : {self.broker.getvalue():.2f}")
                         self.accuracy_rate += 1
                         self.total_signals += 1
                         self.log(f"(6) ACCURACY RATE {self.accuracy_rate}/{self.total_signals} or {(self.accuracy_rate/self.total_signals)*100:.2f}%")
                     # IF POSITION CLOSED WITH LOSS
                     elif self.profit_loss == "loss":
-                        self.log(f'(4) SELL EXECUTED : {order.executed.price}. LOSS: {self.broker.getvalue() - self.wallet}')
-                        self.log(f"(5) CURRENT WALLET : {self.broker.getvalue()}")
+                        self.log(f'(4) SELL EXECUTED : {order.executed.price:.2f}. LOSS: {self.broker.getvalue() - self.wallet:.2f}')
+                        self.log(f"(5) CURRENT WALLET : {self.broker.getvalue():.2f}")
                         self.total_signals += 1
                         self.log(f"(6) ACCURACY RATE {self.accuracy_rate}/{self.total_signals} or {(self.accuracy_rate/self.total_signals)*100:.2f}%")
             self.bar_executed = len(self)
@@ -179,21 +183,23 @@ class Dictum(bt.Strategy):
     def notify_trade(self, trade):
         if not trade.isclosed:
             return
-        self.log('(7) OPERATION PROFIT, GROSS %.2f, NET %.2f' %
-                (trade.pnl, trade.pnlcomm))
+        self.log('(7) OPERATION PROFIT, GROSS %.2f, NET %.2f' % (trade.pnl, trade.pnlcomm)) if trade.pnl > 0 else self.log('(7) OPERATION LOSS, GROSS %.2f, NET %.2f' % (trade.pnl, trade.pnlcomm))
         self.log(f'{50*"-"}\n')
 
     def next(self):
 
         # OPEN POSITIONS
         if not self.position:
+
             # OPEN LONG
             if (self.dc[0] > self.dick.lines.bbt) and (self.dc[0] > self.wma):
+                self.log(f"SIGNAL NUMBER #{self.signal_number}")
+                self.signal_number += 1
             # if (self.dataclose[0] > self.dick.lines.bbt) and (self.dataclose[0] > self.wma):
                 self.sizer()
-                self.log(f"(1) SIGNAL NOTICE: Buy {self.size} shares of {self.params.symbol} at {self.data.close[0]}")
+                self.log(f"(1) SIGNAL NOTICE: Buy {self.size} shares of {self.params.symbol} at {self.data.close[0]:.2f}")
                 # self.buy(size=self.size)
-                # self.currency_format = str(self.data.close[0])[::-1].find('.')
+                # self.currency_format = str(self.size)[::-1].find('.')
                 self.buy(exectype=bt.Order.Market, size=self.size)
                 self.wallet = self.broker.getvalue()
 
@@ -201,11 +207,13 @@ class Dictum(bt.Strategy):
             if self.params.short_positions:
                 # if self.signal_short:
                 if (self.dc[0] < self.dick.lines.bbb) and (self.dc[0] < self.wma):
+                    self.log(f"SIGNAL NUMBER #{self.signal_number}")
+                    self.signal_number += 1
                 # if (self.dataclose[0] < self.dick.lines.bbb) and (self.dataclose[0] < self.wma):
                     self.sizer()
-                    self.log(f"(1) SIGNAL NOTICE: Sell {self.size} shares of {self.params.symbol} at {self.data.close[0]}")
+                    self.log(f"(1) SIGNAL NOTICE: Sell {self.size} shares of {self.params.symbol} at {self.data.close[0]:.2f}")
                     # self.sell(size=self.size)
-                    # self.currency_format = str(self.data.close[0])[::-1].find('.')
+                    # self.currency_format = str(self.size)[::-1].find('.')
                     self.sell(exectype=bt.Order.Market, size=self.size)
                     self.wallet = self.broker.getvalue()
         
@@ -217,13 +225,13 @@ class Dictum(bt.Strategy):
                 if self.datahigh[0] >= self.executed_price * (1 + self.params.takeprofit):
                     # self.close()
                     self.sell(exectype=bt.Order.Limit, size=self.size, price=self.executed_price * (1 + self.params.takeprofit))
-                    self.log(f'(3) CLOSE LONG position at {self.executed_price * (1 + self.params.takeprofit)}')
+                    self.log(f'(3) CLOSE LONG position at {self.executed_price * (1 + self.params.takeprofit):.2f}')
                     self.profit_loss = "profit"
                 # STOP LOSS
                 if self.datalow[0] <= self.executed_price * (1 - self.params.stoploss):
                     self.close()
                     # self.sell(exectype=bt.Order.Market, size=self.size)
-                    self.log(f'(3) CLOSE LONG position at {self.executed_price * (1 - self.params.stoploss)}')
+                    self.log(f'(3) CLOSE LONG position at {self.executed_price * (1 - self.params.stoploss):.2f}')
                     self.profit_loss = "loss"
 
             # CLOSE SHORT
@@ -233,13 +241,13 @@ class Dictum(bt.Strategy):
                     if self.datalow[0] <= self.executed_price * (1 - self.params.takeprofit):
                         # self.close()
                         self.buy(exectype=bt.Order.Limit, size=self.size, price=self.executed_price * (1 - self.params.takeprofit))
-                        self.log(f'(3) CLOSE SHORT position at {self.executed_price * (1 - self.params.takeprofit)}')
+                        self.log(f'(3) CLOSE SHORT position at {self.executed_price * (1 - self.params.takeprofit):.2f}')
                         self.profit_loss = "profit"
                     # STOP LOSS
                     if self.datahigh[0] >= self.executed_price * (1 + self.params.stoploss):
                         self.close()
                         # self.buy(exectype=bt.Order.Market, size=self.size)
-                        self.log(f'(3) CLOSE SHORT position at {self.executed_price * (1 + self.params.stoploss)}')
+                        self.log(f'(3) CLOSE SHORT position at {self.executed_price * (1 + self.params.stoploss):.2f}')
                         self.profit_loss = "loss"
     def stop(self):
         self.log(f'\n{50*"+"}\n')

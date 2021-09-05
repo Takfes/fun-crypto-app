@@ -50,10 +50,10 @@ def get_price_series(type, symbol, con):
         sql_string = f"SELECT * FROM crypto WHERE symbol = '{symbol}' ORDER BY datetime"
         price_series = pd.read_sql(sql_string,con).assign(datetime = lambda x : pd.to_datetime(x.datetime)).set_index('datetime')
     elif type == 'futures15':
-        sql_string = f"SELECT * FROM futures15 WHERE symbol = '{symbol}' and openTime >= '2021-07-01' and openTime < '2021-08-13 15:30:00' ORDER BY openTimets"
+        sql_string = f"SELECT * FROM futures15 WHERE symbol = '{symbol}' and openTime >= '2021-08-01' and openTime < '2021-08-13 15:30:00' ORDER BY openTimets"
         price_series = pd.read_sql(sql_string,con).assign(openTime = lambda x : pd.to_datetime(x.openTime)).set_index('openTime')
     elif type == 'futures1':
-        sql_string = f"SELECT * FROM futures1  WHERE symbol = '{symbol}' and openTime >= '2021-07-01' and openTime < '2021-08-13 15:30:00' ORDER BY openTimets"
+        sql_string = f"SELECT * FROM futures1  WHERE symbol = '{symbol}' and openTime >= '2021-08-01' and openTime < '2021-08-13 15:30:00' ORDER BY openTimets"
         price_series = pd.read_sql(sql_string,con).assign(openTime = lambda x : pd.to_datetime(x.openTime)).set_index('openTime')
     return price_series
 
@@ -101,13 +101,15 @@ if __name__ == '__main__':
                 # cerebro = bt.Cerebro(quicknotify=True)
                 # check cheat_on_open
                 # cerebro = bt.Cerebro(cheat_on_open=True)
-                cerebro = bt.Cerebro()
+                cerebro = bt.Cerebro(cheat_on_open=True, quicknotify=True)
+                # cerebro = bt.Cerebro()
                 cerebro.broker.setcash(int(args.cash))
                 start_portfolio_value = cerebro.broker.getvalue()
                 
                 # Add Dataset(s)
                 feed = bt.feeds.PandasData(dataname=price_series)
                 cerebro.adddata(feed)
+                cerebro.broker.setcommission(commission=0.001, leverage=10)
                 if args.type=='futures1':
                     cerebro.resampledata(feed, timeframe = bt.TimeFrame.Minutes, compression = 15)
 
