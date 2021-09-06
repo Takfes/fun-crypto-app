@@ -84,14 +84,15 @@ class Dictum(bt.Strategy):
         ('period', 110),
         ('factor', 0.618),
         ('multiplier', 3.0),
+        ('printlog',False)
         )
 
     def __init__(self):
 
         # settings
+        # self.params.printlog = True
         self.signal_number = 1
         self.currency_format = 6
-        self.params.printlog = True
         self.starting_cash = self.broker.getvalue()
         self.accuracy_rate = 0
         self.total_signals = 0
@@ -258,5 +259,5 @@ class Dictum(bt.Strategy):
                         self.profit_loss = "loss"
     def stop(self):
         self.log(f'\n{50*"+"}\n')
-        self.log(f'STOP RESULTS : \n\n* stoploss : {self.p.stoploss}\n* takeprofit : {self.p.takeprofit} \n* short_positions : {self.p.short_positions} {self.broker.getvalue()-self.starting_cash}', doprint=True)
+        self.log(f'STOP RESULTS : \n\n* stoploss : {self.p.stoploss}\n* takeprofit : {self.p.takeprofit} \n* short_positions : {self.p.short_positions} {self.broker.getvalue()-self.starting_cash}', doprint=self.params.printlog)
         self.log(f'\n{50*"+"}\n')
