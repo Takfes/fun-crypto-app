@@ -4,7 +4,7 @@ import sqlite3
 import pandas as pd
 import backtrader as bt
 from backtrader import Cerebro
-from backtesting_settings import strategy_settings_dictionary
+from backtesting_settings import strategy_settings_dictionary, strategy_analyzers
 
 from strategies.GoldenCross import GoldenCross
 from strategies.BuyHold import BuyHold
@@ -21,6 +21,12 @@ strategies = {
 }
 
 optimizer = False
+
+type = 'futures1'
+symbol = 'ETHUSDT'
+strategy = 'dic'
+cash = 10000
+risk = 0.025
 
 def parse_user_input():
     parser = argparse.ArgumentParser()
@@ -97,12 +103,9 @@ if __name__ == '__main__':
             else:
                 
                 # initiate cerebro
-                # TODO check quicknotify
-                # cerebro = bt.Cerebro(quicknotify=True)
-                # check cheat_on_open
-                # cerebro = bt.Cerebro(cheat_on_open=True)
-                cerebro = bt.Cerebro(cheat_on_open=True, quicknotify=True)
                 # cerebro = bt.Cerebro()
+                cerebro = bt.Cerebro(cheat_on_open=True, quicknotify=True)
+                # cerebro.broker.setcash(cash)
                 cerebro.broker.setcash(int(args.cash))
                 start_portfolio_value = cerebro.broker.getvalue()
                 
@@ -112,9 +115,7 @@ if __name__ == '__main__':
                 cerebro.broker.setcommission(commission=0.001, leverage=10)
                 if args.type=='futures1':
                     cerebro.resampledata(feed, timeframe=bt.TimeFrame.Minutes, compression=15)
-                    # TODO Resample also to 60 minutes for emergency exits
-                    # cerebro.resampledata(feed, timeframe=bt.TimeFrame.Minutes, compression=60)
-
+                    
                 # TODO make the optimizer run for lists of symbols and settings and return with results per combination
                 # Add Strategy or Optimizer according to parameter input
                 if not optimizer:
@@ -130,10 +131,14 @@ if __name__ == '__main__':
                                             )
                     elif args.strategy == 'dic':
                         cerebro.addstrategy(
-                            strategies[args.strategy],
-                            symbol=args.symbol,
-                            risk=args.risk,
-                            cash=args.cash,
+                            strategies['dic'],
+                            symbol = symbol,
+                            risk = risk,
+                            cash = cash,
+                            # strategies[args.strategy],
+                            # symbol=args.symbol,
+                            # risk=args.risk,
+                            # cash=args.cash,
                             wma_period=strategy_settings.get('wma_period'),
                             stoploss=strategy_settings.get('stoploss'),
                             takeprofit=strategy_settings.get('takeprofit'),
@@ -159,10 +164,14 @@ if __name__ == '__main__':
                             )
                     elif args.strategy == 'dic':
                         cerebro.optstrategy(
-                            strategies[args.strategy],
-                            symbol=args.symbol,
-                            risk=args.risk,
-                            cash=args.cash,
+                            strategies['dic'],
+                            symbol = symbol,
+                            risk = risk,
+                            cash = cash,
+                            # strategies[args.strategy],
+                            # symbol=args.symbol,
+                            # risk=args.risk,
+                            # cash=args.cash,
                             wma_period=strategy_settings.get('wma_period'),
                             stoploss=strategy_settings.get('stoploss'),
                             takeprofit=strategy_settings.get('takeprofit'),
@@ -174,9 +183,14 @@ if __name__ == '__main__':
                     
                     
                 # Add Analyzer
-                # cerebro.addanalyzer(bt.analyzers.DrawDown, _name='mydrawdown')
-                # cerebro.addanalyzer(bt.analyzers.SharpeRatio, _name='mysharpe')
-                # cerebro.addanalyzer(bt.analyzers.Returns, _name='myreturns')
+                if 'drawdown' in strategy_analyzers:
+                    cerebro.addanalyzer(bt.analyzers.DrawDown, _name='drawdown')
+                if 'sharpe' in strategy_analyzers:
+                    cerebro.addanalyzer(bt.analyzers.SharpeRatio, _name='sharpe')
+                if 'returns' in strategy_analyzers:
+                    cerebro.addanalyzer(bt.analyzers.Returns, _name='returns')
+                if 'periodstats' in strategy_analyzers:
+                    cerebro.addanalyzer(bt.analyzers.PeriodStats, _name='periodstats')
                 # cerebro.addanalyzer(bt.analyzers.PositionsValue, _name='mypositionsvalue')
                 # cerebro.addanalyzer(bt.analyzers.PyFolio, _name='mypyfolio')
                 # cerebro.addanalyzer(bt.analyzers.PeriodStats, _name='myperiodstats')
@@ -185,13 +199,30 @@ if __name__ == '__main__':
                 # cerebro.addanalyzer(bt.analyzers.Transactions, _name='mytransactions')
 
                 # Run
+                # R = cerebro.run(stdstats=False)
                 R = cerebro.run()
                 H = R[0]
+                
+                for i, str in enumerate(R):
+                    for anl in strategy_analyzers:
+                        print(i)
+                        print(R[i][0].params._getitems())
+                        print()
+                        print(R[i][0].analyzers.getbyname(anl).get_analysis())
+                        print(50*'-')
+                
+                
+                dir(R[0][0])
+                R[1][0].params._getitems()
+                dir(R[0][0].params)
+                dir(R[1][0].analyzers)
+                R[0][0].analyzers.getbyname('drawdown').get_analysis()
                 
                 # Analyzer Results
                 # https://www.backtrader.com/docu/analyzers-reference/
                 # print('Draw Down:', H.analyzers.mydrawdown.get_analysis())
                 # print('Sharpe Ratio:', H.analyzers.mysharpe.get_analysis())
+                # print('Returns:', H.analyzers.myreturns.get_analysis())
                 # print('Returns:', H.analyzers.myreturns.get_analysis())
                 # print('Position Value:', H.analyzers.mypositionsvalue.get_analysis())
                 # print('PyFolio:', H.analyzers.mypyfolio.get_analysis())
