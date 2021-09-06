@@ -23,13 +23,12 @@ strategies = {
 
 optimizer = False
 
-start = time.time()
-
 # type = 'futures1'
 # symbol = 'ETHUSDT'
 # strategy = 'dic'
 # cash = 10000
 # risk = 0.025
+# datasize = 10000
 
 def parse_user_input():
     parser = argparse.ArgumentParser()
@@ -48,7 +47,7 @@ def print_arguments(args):
         print(f'* {k} : {v}')
     print(f'\n====================================\n')
     
-def get_price_series(type, symbol, con):
+def get_price_series(type, symbol, con, datasize):
     if type == 'stock':
         sql_string = f"SELECT * FROM stockdaily WHERE symbol = '{symbol}' ORDER BY datetime"
         price_series = pd.read_sql(sql_string,con).assign(datetime = lambda x : pd.to_datetime(x.datetime)).set_index('datetime')
@@ -63,13 +62,15 @@ def get_price_series(type, symbol, con):
         price_series = pd.read_sql(sql_string,con).assign(openTime = lambda x : pd.to_datetime(x.openTime)).set_index('openTime')
     elif type == 'futures1':
         # sql_string = f"SELECT * FROM futures1  WHERE symbol = '{symbol}' and openTime >= '2020-09-01' and openTime < '2021-08-31 15:30:00' ORDER BY openTimets"
-        sql_string = f"SELECT * FROM futures1  WHERE symbol = '{symbol}' ORDER BY openTimets limit 300000"
-        price_series = pd.read_sql(sql_string,con).assign(openTime = lambda x : pd.to_datetime(x.openTime)).set_index('openTime')
+        sql_string = f"SELECT * FROM futures1  WHERE symbol = '{symbol}' ORDER BY openTimets DESC limit {datasize}"
+        price_series = pd.read_sql(sql_string,con).assign(openTime = lambda x : pd.to_datetime(x.openTime)).sort_values(by=['openTime']).set_index('openTime')
     return price_series
 
 
 if __name__ == '__main__':
 
+    start = time.time()
+    
     args = parse_user_input()
     print_arguments(args)
     
@@ -79,6 +80,7 @@ if __name__ == '__main__':
     else:
         # strategy_settings = strategy_settings_dictionary['dic']
         strategy_settings = strategy_settings_dictionary[args.strategy]
+        datasize = strategy_settings['datasize']
         # check whether any of the parameters passed is list
         # if so, enable cerebro.optstrategy instead of cerebro.addstrategy
         if any([isinstance(p,list) for p in strategy_settings.values()]):
@@ -87,9 +89,10 @@ if __name__ == '__main__':
 
     try:
         con = sqlite3.connect(config.DB_NAME)
-        # price_series = get_price_series(type,symbol,con)
-        price_series = get_price_series(args.type,args.symbol,con)
-        print(f'> backtesting.py : fetched {price_series.shape[0]} rows for {args.symbol}')
+        # price_series = get_price_series(type,symbol,con,datasize)
+        price_series = get_price_series(args.type,args.symbol,con,datasize)
+        print(f'> backtesting.py : fetched latest {price_series.shape[0]} rows for {args.symbol}')
+        print(f'> backtesting.py : period from {price_series.index.min()} to {price_series.index.max()}')
         print(f'\n====================================\n')
     except Exception as e:
         print(f'DB CONNECTION ERROR')
@@ -115,11 +118,10 @@ if __name__ == '__main__':
                 # Add Dataset(s)
                 feed = bt.feeds.PandasData(dataname=price_series)
                 cerebro.adddata(feed)
-                cerebro.broker.setcommission(commission=0.001, leverage=10)
+                cerebro.broker.setcommission(commission=0.001, leverage=15)
                 if args.type=='futures1':
                     cerebro.resampledata(feed, timeframe=bt.TimeFrame.Minutes, compression=15)
                     
-                # TODO make the optimizer run for lists of symbols and settings and return with results per combination
                 # Add Strategy or Optimizer according to parameter input
                 if not optimizer:
                     
@@ -204,94 +206,84 @@ if __name__ == '__main__':
                 # cerebro.addanalyzer(bt.analyzers.PeriodStats, _name='myperiodstats')
                 # cerebro.addanalyzer(bt.analyzers.SQN, _name='mysqn')
                 # cerebro.addanalyzer(bt.analyzers.Transactions, _name='mytransactions')
+   
+                # Cerebro Results
+                # Optimizer Results to csv
+                if optimizer:
 
-                # Run
-                R = cerebro.run(stdstats=False,optreturn=False)
-                
-                results = [
-                [
-                args.risk
-                ,args.symbol
-                ,r[0].starting_cash
-                ,r[0].pnl
-                ,r[0].total_signals
-                ,r[0].accuracy_rate
-                ,r[0].params.wma_period
-                ,r[0].params.stoploss
-                ,r[0].params.takeprofit
-                ,r[0].params.short_positions
-                ,r[0].params.period
-                ,r[0].params.factor
-                ,r[0].params.multiplier
-                
-                ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['total']['total']
-                ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['total']['open']
-                ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['total']['closed']
-                
-                ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['streak']['won']['longest']
-                ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['streak']['lost']['longest']
-                
-                ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['pnl']['gross']['total']
-                ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['pnl']['gross']['average']
-                
-                ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['won']['total']
-                ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['won']['pnl']['total']
-                ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['lost']['total']
-                ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['lost']['pnl']['total']
-                
-                ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['long']['total']
-                ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['long']['pnl']['total']
-                ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['long']['pnl']['won']['total']
-                ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['long']['pnl']['lost']['total']
+                    # Run
+                    R = cerebro.run(stdstats=False,optreturn=False)
+                    print(f'>>> Cerebro finished {len(R)} trials !!! <<<')
+                    # Collect results
+                    results = [
+                    [
+                    args.risk
+                    ,args.symbol
+                    ,r[0].starting_cash
+                    ,r[0].pnl
+                    ,r[0].total_signals
+                    ,r[0].accuracy_rate
+                    ,r[0].params.wma_period
+                    ,r[0].params.stoploss
+                    ,r[0].params.takeprofit
+                    ,r[0].params.short_positions
+                    ,r[0].params.period
+                    ,r[0].params.factor
+                    ,r[0].params.multiplier
+                    # tradeanalyzer
+                    ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['total']['total']
+                    ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['total']['open']
+                    ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['total']['closed']
+                    ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['streak']['won']['longest']
+                    ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['streak']['lost']['longest']
+                    ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['pnl']['gross']['total']
+                    ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['pnl']['gross']['average']
+                    ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['won']['total']
+                    ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['won']['pnl']['total']
+                    ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['lost']['total']
+                    ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['lost']['pnl']['total']
+                    ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['long']['total']
+                    ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['long']['pnl']['total']
+                    ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['long']['pnl']['won']['total']
+                    ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['long']['pnl']['lost']['total']
+                    ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['short']['total']
+                    ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['short']['pnl']['total']
+                    ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['short']['pnl']['won']['total']
+                    ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['short']['pnl']['lost']['total']
+                    # drawdown analyzer
+                    ,r[0].analyzers.getbyname('drawdown').get_analysis()['drawdown']
+                    ,r[0].analyzers.getbyname('drawdown').get_analysis()['moneydown']
+                    ,r[0].analyzers.getbyname('drawdown').get_analysis()['max']['drawdown']
+                    ,r[0].analyzers.getbyname('drawdown').get_analysis()['max']['moneydown']
+                    # returns
+                    ,r[0].analyzers.getbyname('returns').get_analysis()['rtot']
+                    ,r[0].analyzers.getbyname('returns').get_analysis()['ravg']
+                    ,r[0].analyzers.getbyname('returns').get_analysis()['rnorm']
+                    ,r[0].analyzers.getbyname('returns').get_analysis()['rnorm100']]
+                    for r in R]
 
-                ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['short']['total']
-                ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['short']['pnl']['total']
-                ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['short']['pnl']['won']['total']
-                ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['short']['pnl']['lost']['total']
+                    columns = [
+                        'risk','symbol',
+                        'starting_cash','pnl','total_signals','accuracy_rate',
+                        'p_wma_period','p_stoploss','p_takeprofit','p_short_positions','p_period','p_factor','p_multiplier',
+                        'td_total_total','td_total_open','td_total_closed',
+                        'td_streak_won_longest','td_streak_long_longest','td_pnl_gross_total','td_pnl_loss_average',
+                        'td_won_total','td_won_pnl_total','td_lost_total','td_lost_pnl_total',
+                        'td_long_total','td_long_pnl_total','td_long_pnl_won_total','td_long_pnl_lost_total',
+                        'td_short_total','td_short_pnl_total','td_short_pnl_won_total','td_short_pnl_lost_total',
+                        'dd_dd','dd_md','dd_max_dd','dd_max_md',
+                        'rt_rtot','rt_ravg','rt_rnorm','rt_rnorm100']
+            
+                    dfr = pd.DataFrame(results,columns = columns)#.T.reset_index()
+                    timetag = datetime.now().strftime("%Y%m%d_%H%M%S")
+                    # colnames = ['parameters'] + ['strategy_'+str(x+1) for x in range(dfr.shape[1]-1)]
+                    # dfr.columns = colnames
+                    dfr.to_csv(f'dictum_opt_{timetag}.csv')
 
-                ,r[0].analyzers.getbyname('drawdown').get_analysis()['drawdown']
-                ,r[0].analyzers.getbyname('drawdown').get_analysis()['moneydown']
-                ,r[0].analyzers.getbyname('drawdown').get_analysis()['max']['drawdown']
-                ,r[0].analyzers.getbyname('drawdown').get_analysis()['max']['moneydown']
-
-                ,r[0].analyzers.getbyname('returns').get_analysis()['rtot']
-                ,r[0].analyzers.getbyname('returns').get_analysis()['ravg']
-                ,r[0].analyzers.getbyname('returns').get_analysis()['rnorm']
-                ,r[0].analyzers.getbyname('returns').get_analysis()['rnorm100']]
-                for r in R]
-
-                columns = ['risk','symbol',
-                    'starting_cash','pnl','total_signals','accuracy_rate',
-                    'wma_period','stoploss','takeprofit','short_positions','period','factor','multiplier',
-                    'td_total_total','td_total_open','td_total_closed',
-                    'td_streak_won_longest','td_streak_long_longest','td_pnl_gross_total','td_pnl_loss_average',
-                    'td_won_total','td_won_pnl_total','td_lost_total','td_lost_pnl_total',
-                    'td_long_total','td_long_pnl_total','td_long_pnl_won_total','td_long_pnl_lost_total',
-                    'td_short_total','td_short_pnl_total','td_short_pnl_won_total','td_short_pnl_lost_total',
-                    'dd_dd','dd_md','dd_max_dd','dd_max_md',
-                    'rt_rtot','rt_ravg','rt_rnorm','rt_rnorm100']
-        
-                dfr = pd.DataFrame(results,columns = columns)#.T.reset_index()
-                timetag = datetime.now().strftime("%Y%m%d_%H%M%S")
-                # colnames = ['parameters'] + ['strategy_'+str(x+1) for x in range(dfr.shape[1]-1)]
-                # dfr.columns = colnames
-                dfr.to_csv(f'dictum_opt_{timetag}.csv')
-                                
-                # Analyzer Results
-                # https://www.backtrader.com/docu/analyzers-reference/
-                # print('Draw Down:', H.analyzers.mydrawdown.get_analysis())
-                # print('Sharpe Ratio:', H.analyzers.mysharpe.get_analysis())
-                # print('Returns:', H.analyzers.myreturns.get_analysis())
-                # print('Returns:', H.analyzers.myreturns.get_analysis())
-                # print('Position Value:', H.analyzers.mypositionsvalue.get_analysis())
-                # print('PyFolio:', H.analyzers.mypyfolio.get_analysis())
-                # print('Period Stats:', H.analyzers.myperiodstats.get_analysis())
-                # print('SQN:', H.analyzers.mysqn.get_analysis())
-                # print('Trade Analyzer:', H.analyzers.mytradeanalyzer.get_analysis())
-                # print('Transactions:', H.analyzers.mytransactions.get_analysis())
-
-                if not optimizer:
+                # Results w/o optimizer
+                else:
                     
+                    cerebro.run()
                     # Basic Results
                     end_portfolio_value = cerebro.broker.getvalue()
                     pnl = end_portfolio_value - start_portfolio_value
@@ -299,6 +291,19 @@ if __name__ == '__main__':
                     print(f'Final Portfolio Value: {end_portfolio_value:.2f}')
                     print(f'PnL: {pnl:.2f} - {(pnl/end_portfolio_value)*100:.2f}%')
                     # TODO print(f'Accuracy Rate: {accuracy_rate}/{total_signals} - {(accuracy_rate/total_signals)*100:.2f}%')
+                    
+                    # Analyzer Results
+                    # https://www.backtrader.com/docu/analyzers-reference/
+                    # print('Draw Down:', H.analyzers.mydrawdown.get_analysis())
+                    # print('Sharpe Ratio:', H.analyzers.mysharpe.get_analysis())
+                    # print('Returns:', H.analyzers.myreturns.get_analysis())
+                    # print('Returns:', H.analyzers.myreturns.get_analysis())
+                    # print('Position Value:', H.analyzers.mypositionsvalue.get_analysis())
+                    # print('PyFolio:', H.analyzers.mypyfolio.get_analysis())
+                    # print('Period Stats:', H.analyzers.myperiodstats.get_analysis())
+                    # print('SQN:', H.analyzers.mysqn.get_analysis())
+                    # print('Trade Analyzer:', H.analyzers.mytradeanalyzer.get_analysis())
+                    # print('Transactions:', H.analyzers.mytransactions.get_analysis())
                     
                     # Plot Results
                     cerebro.plot()

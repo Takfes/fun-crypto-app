@@ -27,7 +27,8 @@ strategy_settings_dictionary = {
         'period' : 110,
         'factor' : 0.618,
         'multiplier' : 3,
-        'printlog' : False
+        'printlog' : False,
+        'datasize' : 100000
     },
     
     '3h':{
