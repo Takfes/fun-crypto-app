@@ -69,8 +69,15 @@ class PAT(bt.Indicator):
 
 class TripleH(bt.Strategy):
     
-    params = (('risk',0.25),('ticker','ETH'),
-              ('factor',6.5),('atr_period',170))
+    params = (('symbol', 'unknown'),
+              ('cash', 1000),
+              ('risk', 0.25),
+              ('factor', 6.5),
+              ('atr_period', 170),
+              ('pivot_period', 24),
+              ('stoploss', 0.01),
+              ('takeprofit', 0.01),
+              ('short_positions', 0))
         
     def __init__(self):
 
@@ -111,14 +118,14 @@ class TripleH(bt.Strategy):
         #     if (self.dataclose[0] > self.dick.lines.bbt) and (self.dataclose[0] > self.wma):
         #         amount_to_invest = (self.params.risk * self.broker.cash)
         #         self.size = math.floor(amount_to_invest/self.dataclose[0])
-        #         print(f'Buy {self.size} shares of {self.params.ticker} at {self.data.close[0]}')
+        #         print(f'Buy {self.size} shares of {self.params.symbol} at {self.data.close[0]}')
         #         self.buy(size=self.size)
             
         #     if self.p.short:
         #         if (self.dataclose[0] < self.dick.lines.bbb) and (self.dataclose[0] < self.wma):
         #             amount_to_invest = (self.params.risk * self.broker.cash)
         #             self.size = math.floor(amount_to_invest/self.dataclose[0])
-        #             print(f'Sell {self.size} shares of {self.params.ticker} at {self.data.close[0]}')
+        #             print(f'Sell {self.size} shares of {self.params.symbol} at {self.data.close[0]}')
         #             self.sell(size=self.size)
             
         # else:

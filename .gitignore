@@ -6,4 +6,8 @@ logs/
 __pycache__/
 !data/*.dvc
 .DS_Store
+<<<<<<< HEAD
 apikeys.py
+=======
+apikeys.py
+>>>>>>> resample

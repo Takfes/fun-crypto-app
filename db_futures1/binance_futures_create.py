@@ -26,6 +26,7 @@ sql_create_asset_table_index = """CREATE INDEX {} ON {} (openTimets,symbol);""".
 sql_create_asset_table_index_time = """CREATE INDEX {} ON {} (openTime);""".format(config.DB_ASSET_TABLE_FUTURES_1_INDEX_TIME,config.DB_ASSET_TABLE_FUTURES_1)
 sql_create_asset_table_index_symbol = """CREATE INDEX {} ON {} (symbol);""".format(config.DB_ASSET_TABLE_FUTURES_1_INDEX_SYMBOL,config.DB_ASSET_TABLE_FUTURES_1)
 
+
 if __name__ == '__main__':
     
     # find dir path
@@ -41,5 +42,7 @@ if __name__ == '__main__':
     cursor = con.cursor()
     cursor.execute(sql_create_asset_table)
     cursor.execute(sql_create_asset_table_index)
+    cursor.execute(sql_create_asset_table_index_time)
+    cursor.execute(sql_create_asset_table_index_symbol)
     con.commit()
     con.close()
