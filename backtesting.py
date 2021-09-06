@@ -103,8 +103,7 @@ if __name__ == '__main__':
             else:
                 
                 # initiate cerebro
-                # cerebro = bt.Cerebro()
-                cerebro = bt.Cerebro(cheat_on_open=True, quicknotify=True)
+                cerebro = bt.Cerebro()
                 # cerebro.broker.setcash(cash)
                 cerebro.broker.setcash(int(args.cash))
                 start_portfolio_value = cerebro.broker.getvalue()
@@ -112,7 +111,7 @@ if __name__ == '__main__':
                 # Add Dataset(s)
                 feed = bt.feeds.PandasData(dataname=price_series)
                 cerebro.adddata(feed)
-                cerebro.broker.setcommission(commission=0.001, leverage=10)
+                cerebro.broker.setcommission(commission=0, leverage=10)
                 if args.type=='futures1':
                     cerebro.resampledata(feed, timeframe=bt.TimeFrame.Minutes, compression=15)
                     
@@ -195,28 +194,35 @@ if __name__ == '__main__':
                 # cerebro.addanalyzer(bt.analyzers.PyFolio, _name='mypyfolio')
                 # cerebro.addanalyzer(bt.analyzers.PeriodStats, _name='myperiodstats')
                 # cerebro.addanalyzer(bt.analyzers.SQN, _name='mysqn')
-                # cerebro.addanalyzer(bt.analyzers.TradeAnalyzer, _name='mytradeanalyzer')
+                if 'tradeanalyzer' in strategy_analyzers:
+                    cerebro.addanalyzer(bt.analyzers.TradeAnalyzer, _name='tradeanalyzer')
                 # cerebro.addanalyzer(bt.analyzers.Transactions, _name='mytransactions')
 
                 # Run
                 # R = cerebro.run(stdstats=False)
-                R = cerebro.run()
+                R = cerebro.run(maxcpus=1, stdstats=False, optreturn=False)
                 H = R[0]
-                
+
+                dictkeys = list(dict(R[i][0].params._getitems()).keys())
+
                 for i, str in enumerate(R):
                     for anl in strategy_analyzers:
-                        print(i)
-                        print(R[i][0].params._getitems())
-                        print()
-                        print(R[i][0].analyzers.getbyname(anl).get_analysis())
-                        print(50*'-')
-                
-                
+                        for k in dictkeys:
+                            print(dict(R[i][0].params[k]))
+                            dir(R[i][0].params)
+                            dir(R[1][0].broker)
+                            R[0][0].analyzers.mytradeanalyzer.get_analysis()
+                            print(dict(R[i][0].params._getitems())[k])
+                            print()
+                            print(R[i][0].analyzers.getbyname(anl).get_analysis())
+                            print(50*'-')
+                R[1][0].params.short_positions
+
                 dir(R[0][0])
                 R[1][0].params._getitems()
                 dir(R[0][0].params)
                 dir(R[1][0].analyzers)
-                R[0][0].analyzers.getbyname('drawdown').get_analysis()
+                R[1][0].analyzers.getbyname('tradeanalyzer').get_analysis()
                 
                 # Analyzer Results
                 # https://www.backtrader.com/docu/analyzers-reference/

@@ -95,6 +95,7 @@ class Dictum(bt.Strategy):
         self.starting_cash = self.broker.getvalue()
         self.accuracy_rate = 0
         self.total_signals = 0
+        self.pnl = 0
         
         # 1 minute data
         self.dataopen = self.datas[0].open
@@ -150,12 +151,14 @@ class Dictum(bt.Strategy):
                         self.log(f"(5) CURRENT WALLET : {self.broker.getvalue():.2f}")
                         self.accuracy_rate += 1
                         self.total_signals += 1
+                        self.pnl += self.broker.getvalue() - self.wallet
                         self.log(f"(6) ACCURACY RATE {self.accuracy_rate}/{self.total_signals} or {(self.accuracy_rate/self.total_signals)*100:.2f}%")
                     # IF POSITION CLOSED WITH LOSS
                     elif self.profit_loss == "loss":
                         self.log(f'(4) BUY EXECUTED : {order.executed.price:.2f}. LOSS: {self.broker.getvalue() - self.wallet:.2f}')
                         self.log(f"(5) CURRENT WALLET : {self.broker.getvalue():.2f}")
                         self.total_signals += 1
+                        self.pnl += self.broker.getvalue() - self.wallet
                         self.log(f"(6) ACCURACY RATE {self.accuracy_rate}/{self.total_signals} or {(self.accuracy_rate/self.total_signals)*100:.2f}%")
             # SHORT POSITIONS
             elif order.issell():
@@ -172,12 +175,14 @@ class Dictum(bt.Strategy):
                         self.log(f"(5) CURRENT WALLET : {self.broker.getvalue():.2f}")
                         self.accuracy_rate += 1
                         self.total_signals += 1
+                        self.pnl += self.broker.getvalue() - self.wallet
                         self.log(f"(6) ACCURACY RATE {self.accuracy_rate}/{self.total_signals} or {(self.accuracy_rate/self.total_signals)*100:.2f}%")
                     # IF POSITION CLOSED WITH LOSS
                     elif self.profit_loss == "loss":
                         self.log(f'(4) SELL EXECUTED : {order.executed.price:.2f}. LOSS: {self.broker.getvalue() - self.wallet:.2f}')
                         self.log(f"(5) CURRENT WALLET : {self.broker.getvalue():.2f}")
                         self.total_signals += 1
+                        self.pnl += self.broker.getvalue() - self.wallet
                         self.log(f"(6) ACCURACY RATE {self.accuracy_rate}/{self.total_signals} or {(self.accuracy_rate/self.total_signals)*100:.2f}%")
             self.bar_executed = len(self)
         self.order = None

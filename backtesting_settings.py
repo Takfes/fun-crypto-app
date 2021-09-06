@@ -39,4 +39,4 @@ strategy_settings_dictionary = {
     }
 }
 
-strategy_analyzers = ['drawdown','sharpe','returns','periodstats']
+strategy_analyzers = ['drawdown','sharpe','returns','periodstats', 'tradeanalyzer']
