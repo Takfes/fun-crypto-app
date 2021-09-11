@@ -294,15 +294,15 @@ if __name__ == '__main__':
                 
                         dfr = pd.DataFrame(results,columns = columns).sort_values(by=['td_pnl_gross_total'],ascending=False)
                         
-                        dfr.insert(3, "indicative_position_size", dfr['risk'] * dfr['starting_cash'].astype(int))
-                        dfr.insert(4, "accuracy", dfr['td_won_total']/dfr['td_total_total'])
-                        dfr.insert(5, "total_signals", dfr['td_total_total'])
-                        dfr.insert(6, "gross_profit_pct", dfr['td_pnl_gross_total']/dfr['starting_cash'].astype(int))
-                        dfr.insert(7, "net_profit_pct", dfr['td_pnl_net_total']/dfr['starting_cash'].astype(int))
+                        dfr.insert(3, "indicative_position_size", (dfr['risk'] * dfr['starting_cash'].astype(int))/dfr['stoploss'].astype(float))
+                        dfr.insert(4, "stake_in_usd", (dfr['risk'] * dfr['starting_cash'].astype(int)))
+                        dfr.insert(5, "accuracy", dfr['td_won_total']/dfr['td_total_total'])
+                        dfr.insert(6, "total_signals", dfr['td_total_total'])
+                        dfr.insert(7, "gross_profit_pct", dfr['td_pnl_gross_total']/dfr['starting_cash'].astype(int))
+                        dfr.insert(8, "net_profit_pct", dfr['td_pnl_net_total']/dfr['starting_cash'].astype(int))
                         
                         timetag = datetime.now().strftime("%Y%m%d_%H%M%S")
-                        dfr.to_csv(f'dictum_opt_{timetag}.csv')
-
+                        dfr.to_csv(f'./optimization_results/{args.strategy}_{timetag}_{args.symbol}.csv')
                         
                     else:
                         
@@ -389,14 +389,15 @@ if __name__ == '__main__':
                 
                         dfr = pd.DataFrame(results,columns = columns).sort_values(by=['td_pnl_gross_total'],ascending=False)
                         
-                        dfr.insert(3, "indicative_position_size", dfr['risk'] * dfr['starting_cash'].astype(int))
-                        dfr.insert(4, "accuracy", dfr['td_won_total']/dfr['td_total_total'])
-                        dfr.insert(5, "total_signals", dfr['td_total_total'])
-                        dfr.insert(6, "gross_profit_pct", dfr['td_pnl_gross_total']/dfr['starting_cash'].astype(int))
-                        dfr.insert(7, "net_profit_pct", dfr['td_pnl_net_total']/dfr['starting_cash'].astype(int))
+                        dfr.insert(3, "indicative_position_size", (dfr['risk'] * dfr['starting_cash'].astype(int))/dfr['stoploss'].astype(float))
+                        dfr.insert(4, "stake_in_usd", (dfr['risk'] * dfr['starting_cash'].astype(int)))
+                        dfr.insert(5, "accuracy", dfr['td_won_total']/dfr['td_total_total'])
+                        dfr.insert(6, "total_signals", dfr['td_total_total'])
+                        dfr.insert(7, "gross_profit_pct", dfr['td_pnl_gross_total']/dfr['starting_cash'].astype(int))
+                        dfr.insert(8, "net_profit_pct", dfr['td_pnl_net_total']/dfr['starting_cash'].astype(int))
                         
                         timetag = datetime.now().strftime("%Y%m%d_%H%M%S")
-                        dfr.to_csv(f'dictum_opt_{timetag}.csv')
+                        dfr.to_csv(f'./optimization_results/{args.strategy}_{timetag}_{args.symbol}.csv')
 
                 # Results w/o optimizer
                 else:
