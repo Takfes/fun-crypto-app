@@ -15,19 +15,8 @@
 https://www.one-tab.com/page/Kb8lsK4LSqOzardwGMNAeg
 
 ### TODOs TAKIS
-1. find out how to test multiple strategies on a single datafeed
-2. start end dates as parameters
-3. find out how to test multiple datafeeds
-4. leverage as a parameter
-
+1. check why datasize period = 5000 breaks
+2. check how to pass parameters in custom indicators, such as PAT or DICK
 ### TODOs PREKS
-1. stoploss risk leverage
-   - In general you can use one of the 3 scenarios when entering a signal:
-   - cash * (risk/stoploss)
-   - starting cash * (risk/stoploss)
-   - *That means that stoploss percentage should be bigger than risk percentage, otherwise you need to use leverage
-2. arguments across strategies COIN, STRATEGY, (CASH, RISK)
-3. consistency between arguments - stoploss vs risk input
-   - You need to use leverage x10-x15 in order to avoid problems when risk percentage is almost equal to stoploss 
-   percentage 
-4. what can mits check
+1. extend params to search (stoploss, takeprofit), run for data period = 30.000 and measure time
+2. TripleH strategy : enable funcitonalities similar to those of Dictum

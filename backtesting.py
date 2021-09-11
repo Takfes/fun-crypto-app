@@ -154,6 +154,26 @@ if __name__ == '__main__':
                             multiplier=strategy_settings.get('multiplier'),
                             printlog=strategy_settings.get('printlog')
                             )
+                        
+                    elif args.strategy == '3h':
+                        cerebro.addstrategy(
+                            strategies['3h'],
+                            symbol = symbol,
+                            risk = risk,
+                            cash = cash,
+                            # strategies[args.strategy],
+                            # symbol=args.symbol,
+                            # risk=args.risk,
+                            # cash=args.cash,
+                            wma_period=strategy_settings.get('wma_period'),
+                            stoploss=strategy_settings.get('stoploss'),
+                            takeprofit=strategy_settings.get('takeprofit'),
+                            short_positions=strategy_settings.get('short_positions'),
+                            period=strategy_settings.get('period'),
+                            factor=strategy_settings.get('factor'),
+                            multiplier=strategy_settings.get('multiplier'),
+                            printlog=strategy_settings.get('printlog')
+                            )
                                             
                 else:
                         
@@ -169,6 +189,7 @@ if __name__ == '__main__':
                             fast=strategy_settings.get('fast'),
                             slow=strategy_settings.get('slow')
                             )
+                        
                     elif args.strategy == 'dic':
                         cerebro.optstrategy(
                             # strategies['dic'],

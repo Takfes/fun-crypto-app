@@ -15,14 +15,25 @@ class PAT(bt.Indicator):
     lines = ('ph','pl')  # output lines (array)
     # lines = ('ph','pl','r1','r2','pp','s1','s2')  # output lines (array)
     params = (
-        ('pivot_period', 24),
+        ('pivot_period', 3),
+        ('factor', 6.5),
+        ('atr_period', 170),
     )
 
     def __init__(self):
         # indicate min period ; i.e. buffering period
+        
         self.buffering_period = (self.p.pivot_period * 2) + 1
         self.addminperiod(self.buffering_period)
+        self.center = 0
+        self.lastpp = 0
+        self.tup = 0
+        self.tdn = 0
+        self.trend = 1
 
+        self.ATR = bt.indicators.ATR(self.data, period=self.p.atr_period)
+        
+        
     def next(self):
 
         # calculate pivot points
@@ -30,19 +41,61 @@ class PAT(bt.Indicator):
         lowp = np.array(self.data.low.get(size=self.buffering_period))
         closep = np.array(self.data.close.get(size=self.buffering_period))
 
-        high = np.mean(highp)
-        low = np.mean(lowp)
-        close = np.mean(closep)
-        hlc = (high+low+close)/3.0
-
-        self.lines.ph[0] = ph = np.max(highp)
-        self.lines.pl[0] = pl = np.min(lowp)
+        # high = np.mean(highp)
+        # low = np.mean(lowp)
+        # close = np.mean(closep)
+        # hlc = (high+low+close)/3.0
         
         # self.lines.r1[0] = r1 = (hlc * 2) - low
         # self.lines.r2[0] = r2 = hlc + (high - low)
         # self.lines.s1[0] = s1 = (hlc * 2) - high
         # self.lines.s2[0] = s2 = hlc - (high - low)
         # self.lines.pp[0] = pp = hlc
+
+        highest_bar_position = np.max(highp).argmax()
+        lowest_bar_position = np.max(lowp).argmax()
+        
+        if highest_bar_position == 0:
+            # self.lines.ph[0] = ph = np.max(highp)
+            self.lastpp = np.max(highp)
+        
+        if lowest_bar_position == 0:
+            # self.lastpp = self.lines.pl[0] = pl = np.min(lowp)
+            self.lastpp = np.max(lowp)
+        
+        if self.lastpp != 0:
+            
+            if self.center == 0:
+                self.center = self.lastpp
+            else:
+                self.center = (self.center * 2 + self.lastpp)/3
+            
+            self.up = self.center - (self.p.factor * self.ATR[0])
+            self.dn = self.center + (self.p.factor * self.ATR[0])
+            
+            # TREND UP
+            if closep[-1] > self.tup:
+                self.tup = max(self.tup,self.up)
+            else:
+                self.tup = self.up
+
+            # TREND DOWN
+            if closep[-1] < self.tdn:
+                self.tup = min(self.tdn,self.dn)
+            else:
+                self.tdn = self.dn
+
+            # TREND
+            if self.closep[0] > self.tdn:
+                self.trend = 1
+            elif self.closep[0] < self.tup:
+                self.trend = -1
+                
+            # TRAILING STOP LOSS
+            if self.trend == 1:
+                self.tsl = self.tup
+            else:
+                self.tsl = self.tdn
 
         if debug :
             pass
@@ -72,9 +125,6 @@ class TripleH(bt.Strategy):
     params = (('symbol', 'unknown'),
               ('cash', 1000),
               ('risk', 0.25),
-              ('factor', 6.5),
-              ('atr_period', 170),
-              ('pivot_period', 24),
               ('stoploss', 0.01),
               ('takeprofit', 0.01),
               ('short_positions', 0))
