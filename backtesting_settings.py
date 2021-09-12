@@ -6,27 +6,15 @@ strategy_settings_dictionary = {
         'fast' : [15,25],
         'slow' : 30
     },
-
-    'macd':{},
-    
-    'bnh':{},
-    
-    'stoc':{},
-    
-    'triple':{},
-    
-    'dip':{},
-    
-    'bearx':{},
     
     'dic':{
         'wma_period' : 300,
-        'stoploss' : [0.025,0.04],
-        'takeprofit' : [0.025,0.04], # [0.001,0.00115,0.015,0.02,0.025,0.035,0.04]
-        'short_positions' : [0,1],
-        'period' : 110,
-        'factor' : 0.618,
-        'multiplier' : 3,
+        'stoploss' : 0.025,
+        'takeprofit' : 0.025,
+        'short_positions' : 1,
+        'period' : [100,200],
+        'factor' : [0.618,0.5],
+        'multiplier' : [3,4],
         'printlog' : False,
         'datasize' : 10000
     },
@@ -37,7 +25,9 @@ strategy_settings_dictionary = {
         'short_positions' : 1,
         'factor' : 6.5,
         'atr_period' : 170,
-        'pivot_period' : 24
+        'pivot_period' : 2,
+        'printlog' : False,
+        'datasize' : 1000
     }
 }
 

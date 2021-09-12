@@ -2,124 +2,113 @@ import math
 import backtrader as bt
 from backtrader.indicators.pivotpoint import PivotPoint
 import numpy as np
-import sys
 
-debug = False
+debug = True
 
 class PAT(bt.Indicator):
 
-    # global vwma_list, bbt_list, bbb_list
-    # vwma_list = bbt_list = bbb_list = []
-
-    # lines = ('pp',)  # output lines (array)
-    lines = ('ph','pl')  # output lines (array)
-    # lines = ('ph','pl','r1','r2','pp','s1','s2')  # output lines (array)
+    lines = ('ph','pl')
+    
+    plotinfo = dict(plot=True, subplot=False, plotlinelabels=True)
+    plotlines = dict(
+        ph=dict(marker='$\u21E9$', markersize=6.0, color='green', fillstyle='full', ls=''),
+        pl=dict(marker='$\u21E7$', markersize=6.0, color='red', fillstyle='full', ls='')
+        )
     params = (
+        ('barplot', False),  # plot above/below max/min for clarity in bar plot
+        ('bardist', 0.055),  # distance to max/min in absolute perc
+    )
+    
+    params = (
+        ('atr_period', 170),
         ('pivot_period', 3),
         ('factor', 6.5),
-        ('atr_period', 170),
+        ('printlog',True)
     )
 
     def __init__(self):
         # indicate min period ; i.e. buffering period
-        
         self.buffering_period = (self.p.pivot_period * 2) + 1
         self.addminperiod(self.buffering_period)
+        self.ATR = bt.indicators.ATR(self.data, period=self.p.atr_period)
+
         self.center = 0
         self.lastpp = 0
         self.tup = 0
         self.tdn = 0
         self.trend = 1
-
-        self.ATR = bt.indicators.ATR(self.data, period=self.p.atr_period)
+        self.ph = self.pl = 0
         
+    def log(self, txt, dt=None, doprint=False):
+        if self.params.printlog or doprint:
+            dt = dt or self.datas[0].datetime.datetime(0)
+            print('%s, %s' % (dt.isoformat(), txt))
         
     def next(self):
 
-        # calculate pivot points
+        # grab necessary info
         highp = np.array(self.data.high.get(size=self.buffering_period))
         lowp = np.array(self.data.low.get(size=self.buffering_period))
         closep = np.array(self.data.close.get(size=self.buffering_period))
-
-        # high = np.mean(highp)
-        # low = np.mean(lowp)
-        # close = np.mean(closep)
-        # hlc = (high+low+close)/3.0
         
-        # self.lines.r1[0] = r1 = (hlc * 2) - low
-        # self.lines.r2[0] = r2 = hlc + (high - low)
-        # self.lines.s1[0] = s1 = (hlc * 2) - high
-        # self.lines.s2[0] = s2 = hlc - (high - low)
-        # self.lines.pp[0] = pp = hlc
-
-        highest_bar_position = np.max(highp).argmax()
-        lowest_bar_position = np.max(lowp).argmax()
+        # get highest high or lowest low position
+        highest_bar_position = highp.argmax()
+        lowest_bar_position = lowp.argmin()
         
+        # check for pivot high
         if highest_bar_position == 0:
-            # self.lines.ph[0] = ph = np.max(highp)
+            self.lines.ph[-(self.buffering_period)] = self.ph = np.max(highp)
             self.lastpp = np.max(highp)
-        
+
+        # check for pivot low
         if lowest_bar_position == 0:
-            # self.lastpp = self.lines.pl[0] = pl = np.min(lowp)
-            self.lastpp = np.max(lowp)
+            self.lines.pl[-(self.buffering_period)] = self.pl = np.min(lowp)
+            self.lastpp = np.min(lowp)
         
         if self.lastpp != 0:
             
+            # calculate center
             if self.center == 0:
                 self.center = self.lastpp
             else:
                 self.center = (self.center * 2 + self.lastpp)/3
             
+            # calculate up and down
             self.up = self.center - (self.p.factor * self.ATR[0])
             self.dn = self.center + (self.p.factor * self.ATR[0])
             
-            # TREND UP
+            # calculate trend up
             if closep[-1] > self.tup:
                 self.tup = max(self.tup,self.up)
             else:
                 self.tup = self.up
 
-            # TREND DOWN
+            # calculate trend down
             if closep[-1] < self.tdn:
                 self.tup = min(self.tdn,self.dn)
             else:
                 self.tdn = self.dn
 
-            # TREND
-            if self.closep[0] > self.tdn:
+            # calculate trend
+            if closep[0] > self.tdn:
                 self.trend = 1
-            elif self.closep[0] < self.tup:
+            elif closep[0] < self.tup:
                 self.trend = -1
                 
-            # TRAILING STOP LOSS
+            # calculate trailing stoploss
             if self.trend == 1:
                 self.tsl = self.tup
             else:
                 self.tsl = self.tdn
 
         if debug :
-            pass
-            # print('> highp : ','\n',type(highp),'\n',highp,'\n')
-            # print('> lowp : ','\n',type(lowp),'\n',lowp,'\n')
-            # print('> closep : ','\n',type(closep),'\n',closep,'\n')
-            # print('> hlcp : ','\n',type(hlcp),'\n',hlcp,'\n')
-
-            # print('> high : ','\n',type(high),'\n',high,'\n')
-            # print('> low : ','\n',type(low),'\n',low,'\n')
-            # print('> close : ','\n',type(close),'\n',close,'\n')
-            # print('> hlcp : ','\n',type(hlc),'\n',hlc,'\n')
-            
-            # print('> r1 : ','\n',type(r1),'\n',r1,'\n')
-            # print('> r2 : ','\n',type(r2),'\n',r2,'\n')
-            # print('> s1 : ','\n',type(s1),'\n',s1,'\n')
-            # print('> s2 : ','\n',type(s2),'\n',s2,'\n')
-            # print('> pp : ','\n',type(pp),'\n',pp,'\n')
-
-            # print('> ph : ','\n',type(ph),'\n',ph,'\n')
-            # print('> pl : ','\n',type(pl),'\n',pl,'\n')
-            
-
-
+            self.log(f'length : {len(self.datas[0])}')
+            self.log(f'highp : {highp[0]}')
+            self.log(highp)
+            self.log(f'highest_bar_position : {highest_bar_position}')
+            self.log(f'> ph : {self.ph}')
+            self.log(f'> pl : {self.pl}')
+            self.log(50*'=')
 class TripleH(bt.Strategy):
     
     params = (('symbol', 'unknown'),
@@ -127,15 +116,18 @@ class TripleH(bt.Strategy):
               ('risk', 0.25),
               ('stoploss', 0.01),
               ('takeprofit', 0.01),
-              ('short_positions', 0))
+              ('short_positions', 0),
+              ('atr_period', 170),
+              ('pivot_period', 3),
+              ('factor', 6.5),
+              ('printlog',False),
+              )
         
     def __init__(self):
-
         self.dataclose = self.datas[0].close
         self.ATR = bt.indicators.ATR(self.data, period=self.p.atr_period)
-        # pat = self.pat = PAT(self.data)
-        # pat.plotinfo.subplot = False
-
+        pat = self.pat = PAT(self.data, atr_period = self.p.atr_period, pivot_period = self.p.pivot_period, factor = self.p.factor)
+        pat.plotinfo.subplot = False
 
     def log(self, txt, dt=None):
         dt = dt or self.datas[0].datetime.date(0)
@@ -156,11 +148,7 @@ class TripleH(bt.Strategy):
     #     self.order = None
                 
     def next(self):
-        print(self.ATR)
-        print(dir(self.ATR))
-        print(self.ATR * 1)
-        print(self.ATR * self.p.factor)
-        print(50*'=')
+        pass
         # print(len(self.data))
         
         # if not self.position:

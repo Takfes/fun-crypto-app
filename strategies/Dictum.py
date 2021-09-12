@@ -5,26 +5,7 @@ import sys
 
 debug = False
 
-# TODO check quicknotify, cheat-on-open for entry and exit in the same bar
-# ===
-# quicknotify: Broker notifications are delivered right before the delivery of the next prices. For backtesting this has
-# no implications, but with live brokers a notification can take place long before the bar is delivered. When set to
-# True notifications will be delivered as soon as possible (see qcheck in live feeds)
-# ===
-# cheat-on-open: The next_open method of strategies will be called. This happens before next and before the broker has
-# had a chance to evaluate orders. The indicators have not yet been recalculated. This allows issuing an orde which
-# takes into account the indicators of the previous day but uses the open price for stake calculations
-# ===
-# For cheat_on_open order execution, it is also necessary to make the call cerebro.broker.set_coo(True) or instantite a
-# broker with BackBroker(coo=True) (where coo stands for cheat-on-open) or set the broker_coo parameter to True. Cerebro
-# will do it automatically unless disabled below.
-# ===
-# broker_coo (default: True)
-# This will automatically invoke the set_coo method of the broker with True to activate cheat_on_open execution. Will
-# only do it if cheat_on_open is also True
-
 # Custom Indicator
-
 class DICK(bt.Indicator):
 
     lines = ('vwma', 'bbt', 'bbb')  # output lines (array)
@@ -56,7 +37,6 @@ class DICK(bt.Indicator):
         # add bbt & bbb lines
         self.lines.bbt[0] = vwma + (self.p.multiplier * self.p.factor * std)
         self.lines.bbb[0] = vwma - (self.p.multiplier * self.p.factor * std)
-
 
         if debug:
             print('> highp : ', '\n', type(highp), '\n', highp, '\n')
@@ -112,7 +92,7 @@ class Dictum(bt.Strategy):
         
         # indicators
         self.wma = bt.indicators.WeightedMovingAverage(self.datas[1], period=self.params.wma_period)
-        dick = self.dick = DICK(self.datas[1])
+        dick = self.dick = DICK(self.datas[1], period = self.p.period, factor = self.p.factor, multiplier = self.p.multiplier)
         dick.plotinfo.subplot = False
         
     def log(self, txt, dt=None, doprint=False):
@@ -259,5 +239,5 @@ class Dictum(bt.Strategy):
                         self.profit_loss = "loss"
     def stop(self):
         self.log(f'\n{50*"+"}\n')
-        self.log(f'STOP RESULTS : \n\n* stoploss : {self.p.stoploss}\n* takeprofit : {self.p.takeprofit} \n* short_positions : {self.p.short_positions} {self.broker.getvalue()-self.starting_cash}', doprint=self.params.printlog)
+        self.log(f'STOP RESULTS : \n\n* factor : {self.p.factor}\n* multiplier : {self.p.multiplier} \n* period : {self.p.period}', doprint=False)
         self.log(f'\n{50*"+"}\n')

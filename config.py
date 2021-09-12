@@ -37,7 +37,7 @@ manually remove : USDT, OKB, HT, MIOTA, BCD, WBTC, ONGAS
 '''
 
 TICKERSXT = [
-    'BTC','ETH','BNB','XRP','DOGE','ADA',    'MATIC','BUSD','SOL','DOT','LTC',    'LINK','ETC','FIL','EOS','THETA','BCH',    'VET','TFUEL','KSM','UNI','TRX','XLM',    'DATA','USDC','GTO','NEO','BTT',    'ZEC','BSV','ICP','CRV','XMR','CAKE',    'ALGO','QTUM','OMG','XTZ','ATOM',    'RUNE','DASH','LUNA','SUSHI','CHZ','ZIL',    'JST','BTG','WAVES','AAVE','BAKE',    'FTT','HBAR','SXP','GRT','ONT','MANA',    'IOST','1INCH','ZRX','ENJ','COMP','AVAX','YFI',    'SC','SRM','ICX','FTM','KNC','NANO','DOCK',    'KEY','ZEN','RVN','XVS','ONE','MKR','MTL','BAT',    'SNX','TRB','DGB','XEM','KAVA',    'BAND','OGN','NEAR','HOT','INJ','XVG','LSK',    'WIN','MFT','NU']
+    'BTC','ETH','BNB','XRP','DOGE','ADA','MATIC','BUSD','SOL','DOT','LTC','LINK','ETC','FIL','EOS','THETA','BCH',    'VET','TFUEL','KSM','UNI','TRX','XLM',    'DATA','USDC','GTO','NEO','BTT',    'ZEC','BSV','ICP','CRV','XMR','CAKE',    'ALGO','QTUM','OMG','XTZ','ATOM',    'RUNE','DASH','LUNA','SUSHI','CHZ','ZIL',    'JST','BTG','WAVES','AAVE','BAKE',    'FTT','HBAR','SXP','GRT','ONT','MANA',    'IOST','1INCH','ZRX','ENJ','COMP','AVAX','YFI',    'SC','SRM','ICX','FTM','KNC','NANO','DOCK',    'KEY','ZEN','RVN','XVS','ONE','MKR','MTL','BAT',    'SNX','TRB','DGB','XEM','KAVA',    'BAND','OGN','NEAR','HOT','INJ','XVG','LSK',    'WIN','MFT','NU']
 
 '''
 HOW TICKERSXT IS DERIVED :

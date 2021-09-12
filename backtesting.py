@@ -24,12 +24,12 @@ strategies = {
 optimizer = False
 optreturn = True
 
-# type = 'futures1'
-# symbol = 'ETHUSDT'
-# strategy = 'dic'
-# cash = 10000
-# risk = 0.025
-# datasize = 10000
+type = 'futures1'
+symbol = 'ETHUSDT'
+strategy = '3h'
+cash = 10000
+risk = 0.025
+datasize = 10000
 
 def parse_user_input():
     parser = argparse.ArgumentParser()
@@ -80,6 +80,7 @@ if __name__ == '__main__':
         sys.exit()
     else:
         # strategy_settings = strategy_settings_dictionary['dic']
+        # strategy_settings = strategy_settings_dictionary['3h']
         strategy_settings = strategy_settings_dictionary[args.strategy]
         datasize = strategy_settings['datasize']
         # check whether any of the parameters passed is list
@@ -165,21 +166,17 @@ if __name__ == '__main__':
                             # symbol=args.symbol,
                             # risk=args.risk,
                             # cash=args.cash,
-                            wma_period=strategy_settings.get('wma_period'),
                             stoploss=strategy_settings.get('stoploss'),
                             takeprofit=strategy_settings.get('takeprofit'),
                             short_positions=strategy_settings.get('short_positions'),
-                            period=strategy_settings.get('period'),
                             factor=strategy_settings.get('factor'),
-                            multiplier=strategy_settings.get('multiplier'),
+                            atr_period=strategy_settings.get('atr_period'),
+                            pivot_period=strategy_settings.get('pivot_period'),
                             printlog=strategy_settings.get('printlog')
                             )
                                             
                 else:
                         
-                    # add output file
-                    # cerebro.addwriter(bt.WriterFile, csv=True)
-                    
                     if args.strategy == 'ma':
                         cerebro.optstrategy(
                             strategies[args.strategy],
@@ -209,6 +206,25 @@ if __name__ == '__main__':
                             multiplier=strategy_settings.get('multiplier'),
                             printlog=strategy_settings.get('printlog')
                             )
+                        
+                    elif args.strategy == '3h':
+                        cerebro.optstrategy(
+                            # strategies['3h'],
+                            # symbol = symbol,
+                            # risk = risk,
+                            # cash = cash,
+                            strategies[args.strategy],
+                            symbol=args.symbol,
+                            risk=args.risk,
+                            cash=args.cash,
+                            stoploss=strategy_settings.get('stoploss'),
+                            takeprofit=strategy_settings.get('takeprofit'),
+                            short_positions=strategy_settings.get('short_positions'),
+                            factor=strategy_settings.get('factor'),
+                            atr_period=strategy_settings.get('atr_period'),
+                            pivot_period=strategy_settings.get('pivot_period'),
+                            printlog=strategy_settings.get('printlog')
+                            )
                     
                     
                 # Add Analyzer
@@ -230,9 +246,10 @@ if __name__ == '__main__':
                 # cerebro.addanalyzer(bt.analyzers.Transactions, _name='mytransactions')
    
                 # Cerebro Results
-                # Optimizer Results to csv
+                # Optimizer Results
                 if optimizer:
                     
+                    # w/ optreturn  
                     if optreturn:
                         # Run
                         R = cerebro.run(stdstats=False)
@@ -315,16 +332,18 @@ if __name__ == '__main__':
                 
                         dfr = pd.DataFrame(results,columns = columns).sort_values(by=['td_pnl_gross_total'],ascending=False)
                         
-                        dfr.insert(3, "indicative_position_size", (dfr['risk'] * dfr['starting_cash'].astype(int))/dfr['stoploss'].astype(float))
-                        dfr.insert(4, "stake_in_usd", (dfr['risk'] * dfr['starting_cash'].astype(int)))
-                        dfr.insert(5, "accuracy", dfr['td_won_total']/dfr['td_total_total'])
-                        dfr.insert(6, "total_signals", dfr['td_total_total'])
-                        dfr.insert(7, "gross_profit_pct", dfr['td_pnl_gross_total']/dfr['starting_cash'].astype(int))
-                        dfr.insert(8, "net_profit_pct", dfr['td_pnl_net_total']/dfr['starting_cash'].astype(int))
+                        dfr.insert(0, "strategy", args.strategy)
+                        dfr.insert(4, "indicative_position_size", (dfr['risk'] * dfr['starting_cash'].astype(int))/dfr['stoploss'].astype(float))
+                        dfr.insert(5, "stake_in_usd", (dfr['risk'] * dfr['starting_cash'].astype(int)))
+                        dfr.insert(6, "accuracy", dfr['td_won_total']/dfr['td_total_total'])
+                        dfr.insert(7, "total_signals", dfr['td_total_total'])
+                        dfr.insert(8, "gross_profit_pct", dfr['td_pnl_gross_total']/dfr['starting_cash'].astype(int))
+                        dfr.insert(9, "net_profit_pct", dfr['td_pnl_net_total']/dfr['starting_cash'].astype(int))
                         
                         timetag = datetime.now().strftime("%Y%m%d_%H%M%S")
-                        dfr.to_csv(f'./optimization_results/{args.strategy}_{timetag}_{args.symbol}.csv')
-                        
+                        dfr.to_csv(f'./optimization_results/{args.strategy}_{timetag}_{args.symbol}.csv', index=False)
+                    
+                    # w/o optreturn    
                     else:
                         
                         R = cerebro.run(stdstats=False,optreturn=False)
@@ -410,6 +429,7 @@ if __name__ == '__main__':
                 
                         dfr = pd.DataFrame(results,columns = columns).sort_values(by=['td_pnl_gross_total'],ascending=False)
                         
+                        dfr.insert(0, "strategy", args.strategy)
                         dfr.insert(3, "indicative_position_size", (dfr['risk'] * dfr['starting_cash'].astype(int))/dfr['stoploss'].astype(float))
                         dfr.insert(4, "stake_in_usd", (dfr['risk'] * dfr['starting_cash'].astype(int)))
                         dfr.insert(5, "accuracy", dfr['td_won_total']/dfr['td_total_total'])
@@ -418,7 +438,7 @@ if __name__ == '__main__':
                         dfr.insert(8, "net_profit_pct", dfr['td_pnl_net_total']/dfr['starting_cash'].astype(int))
                         
                         timetag = datetime.now().strftime("%Y%m%d_%H%M%S")
-                        dfr.to_csv(f'./optimization_results/{args.strategy}_{timetag}_{args.symbol}.csv')
+                        dfr.to_csv(f'./optimization_results/{args.strategy}_{timetag}_{args.symbol}.csv', index=False)
 
                 # Results w/o optimizer
                 else:
@@ -430,7 +450,6 @@ if __name__ == '__main__':
                     print(f'\nStarting Portfolio Value: {start_portfolio_value:.2f}')
                     print(f'Final Portfolio Value: {end_portfolio_value:.2f}')
                     print(f'PnL: {pnl:.2f} - {(pnl/end_portfolio_value)*100:.2f}%')
-                    # TODO print(f'Accuracy Rate: {accuracy_rate}/{total_signals} - {(accuracy_rate/total_signals)*100:.2f}%')
                     
                     # Analyzer Results
                     # https://www.backtrader.com/docu/analyzers-reference/
