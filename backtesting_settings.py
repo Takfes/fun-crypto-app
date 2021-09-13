@@ -25,8 +25,8 @@ strategy_settings_dictionary = {
         'short_positions' : 1,
         'factor' : 6.5,
         'atr_period' : 170,
-        'pivot_period' : 2,
-        'printlog' : False,
+        'pivot_period' : 100,
+        'printlog' : True,
         'datasize' : 1000
     }
 }

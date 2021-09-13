@@ -3,27 +3,24 @@ import backtrader as bt
 from backtrader.indicators.pivotpoint import PivotPoint
 import numpy as np
 
-debug = True
-
+debug = False
 class PAT(bt.Indicator):
 
     lines = ('ph','pl')
     
     plotinfo = dict(plot=True, subplot=False, plotlinelabels=True)
     plotlines = dict(
-        ph=dict(marker='$\u21E9$', markersize=6.0, color='green', fillstyle='full', ls=''),
-        pl=dict(marker='$\u21E7$', markersize=6.0, color='red', fillstyle='full', ls='')
+        ph=dict(marker='o', markersize=6.0, color='blue', fillstyle='full', ls=''), # $\u21E9$
+        pl=dict(marker='o', markersize=6.0, color='red', fillstyle='full', ls='') # $\u21E7$
         )
-    params = (
-        ('barplot', False),  # plot above/below max/min for clarity in bar plot
-        ('bardist', 0.055),  # distance to max/min in absolute perc
-    )
     
     params = (
         ('atr_period', 170),
         ('pivot_period', 3),
         ('factor', 6.5),
-        ('printlog',True)
+        ('printlog',True),
+        ('barplot', False),  # plot above/below max/min for clarity in bar plot
+        ('bardist', 0.005),  # distance to max/min in absolute perc
     )
 
     def __init__(self):
@@ -36,8 +33,10 @@ class PAT(bt.Indicator):
         self.lastpp = 0
         self.tup = 0
         self.tdn = 0
-        self.trend = 1
+        self.trend = [0,1]
         self.ph = self.pl = 0
+        self.cacheh = 0
+        self.cachel = 0
         
     def log(self, txt, dt=None, doprint=False):
         if self.params.printlog or doprint:
@@ -55,15 +54,20 @@ class PAT(bt.Indicator):
         highest_bar_position = highp.argmax()
         lowest_bar_position = lowp.argmin()
         
-        # check for pivot high
-        if highest_bar_position == 0:
-            self.lines.ph[-(self.buffering_period)] = self.ph = np.max(highp)
-            self.lastpp = np.max(highp)
+        
+        if len(self.datas[0]) - self.cacheh > self.p.pivot_period:
+            # check for pivot high
+            if highest_bar_position == (self.p.pivot_period+1):
+                self.lines.ph[-(self.buffering_period)] = self.ph = np.max(highp)
+                self.lastpp = np.max(highp)
+                self.cacheh = len(self.datas[0])
 
-        # check for pivot low
-        if lowest_bar_position == 0:
-            self.lines.pl[-(self.buffering_period)] = self.pl = np.min(lowp)
-            self.lastpp = np.min(lowp)
+        if len(self.datas[0]) - self.cachel > self.p.pivot_period:
+            # check for pivot low
+            if lowest_bar_position == (self.p.pivot_period+1):
+                self.lines.pl[-(self.buffering_period)] = self.pl = np.min(lowp)
+                self.lastpp = np.min(lowp)
+                self.cachel = len(self.datas[0])
         
         if self.lastpp != 0:
             
@@ -91,12 +95,14 @@ class PAT(bt.Indicator):
 
             # calculate trend
             if closep[0] > self.tdn:
-                self.trend = 1
+                self.trend.append(1)
             elif closep[0] < self.tup:
-                self.trend = -1
+                self.trend.append(-1)
+            else:
+                self.trend.append(1)
                 
             # calculate trigger line
-            if self.trend == 1:
+            if self.trend[-1] == 1:
                 self.tl = self.tup
             else:
                 self.tl = self.tdn
@@ -123,12 +129,6 @@ class TripleH(bt.Strategy):
               ('factor', 6.5),
               ('printlog',False),
               )
-        
-    def __init__(self):
-        self.dataclose = self.datas[0].close
-        self.ATR = bt.indicators.ATR(self.data, period=self.p.atr_period)
-        pat = self.pat = PAT(self.data, atr_period = self.p.atr_period, pivot_period = self.p.pivot_period, factor = self.p.factor)
-        pat.plotinfo.subplot = False
 
     def __init__(self):
 
@@ -243,7 +243,7 @@ class TripleH(bt.Strategy):
         if not self.position:
 
             # OPEN LONG
-            if pat.trend == 1 and pat.trend[-1] == -1:
+            if (self.pat.trend[-1] == 1) & (self.pat.trend[-2] == -1):
                 self.log(f"SIGNAL NUMBER #{self.signal_number}")
                 self.signal_number += 1
                 self.sizer()
@@ -255,7 +255,7 @@ class TripleH(bt.Strategy):
 
             # OPEN SHORT
             if self.params.short_positions:
-                if pat.trend == -1 and pat.trend[-1] == 1:
+                if (self.pat.trend[-1] == -1) & (self.pat.trend[-2] == 1):
                     self.log(f"SIGNAL NUMBER #{self.signal_number}")
                     self.signal_number += 1
                     self.sizer()
@@ -300,11 +300,5 @@ class TripleH(bt.Strategy):
 
     def stop(self):
         self.log(f'\n{50 * "+"}\n')
-        self.log(f'STOP RESULTS : \n\n* factor : {self.p.factor}\n* multiplier : {self.p.multiplier} \n* period : {self.p.period}', doprint=False)
+        self.log(f'STOP RESULTS : \n\n* atr_period : {self.p.atr_period}\n* pivot_period : {self.p.pivot_period} \n* factor : {self.p.factor}', doprint=False)
         self.log(f'\n{50 * "+"}\n')
-
-        # stopLoss
-        # takeProfit (target)
-        # number of singals
-        # accuracy (takeProfit/num of signals)
-        # net profit

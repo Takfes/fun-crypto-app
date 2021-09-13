@@ -24,12 +24,12 @@ strategies = {
 optimizer = False
 optreturn = True
 
-type = 'futures1'
-symbol = 'ETHUSDT'
-strategy = '3h'
-cash = 10000
-risk = 0.025
-datasize = 10000
+# type = 'futures1'
+# symbol = 'ETHUSDT'
+# strategy = '3h'
+# cash = 10000
+# risk = 0.025
+# datasize = 10000
 
 def parse_user_input():
     parser = argparse.ArgumentParser()
@@ -158,14 +158,14 @@ if __name__ == '__main__':
                         
                     elif args.strategy == '3h':
                         cerebro.addstrategy(
-                            strategies['3h'],
-                            symbol = symbol,
-                            risk = risk,
-                            cash = cash,
-                            # strategies[args.strategy],
-                            # symbol=args.symbol,
-                            # risk=args.risk,
-                            # cash=args.cash,
+                            # strategies['3h'],
+                            # symbol = symbol,
+                            # risk = risk,
+                            # cash = cash,
+                            strategies[args.strategy],
+                            symbol=args.symbol,
+                            risk=args.risk,
+                            cash=args.cash,
                             stoploss=strategy_settings.get('stoploss'),
                             takeprofit=strategy_settings.get('takeprofit'),
                             short_positions=strategy_settings.get('short_positions'),
