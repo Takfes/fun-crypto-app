@@ -18,4 +18,3 @@ https://www.one-tab.com/page/Kb8lsK4LSqOzardwGMNAeg
 1. check why datasize period = 5000 breaks
 ### TODOs PREKS
 1. extend params to search (stoploss, takeprofit), run for data period = 30.000 and measure time
-2. TripleH strategy : enable funcitonalities similar to those of Dictum
