@@ -95,11 +95,11 @@ class PAT(bt.Indicator):
             elif closep[0] < self.tup:
                 self.trend = -1
                 
-            # calculate trailing stoploss
+            # calculate trigger line
             if self.trend == 1:
-                self.tsl = self.tup
+                self.tl = self.tup
             else:
-                self.tsl = self.tdn
+                self.tl = self.tdn
 
         if debug :
             self.log(f'length : {len(self.datas[0])}')
