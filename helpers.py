@@ -1,11 +1,299 @@
-import json, sys, requests, time, calendar, os
+import requests, time, calendar, os
 from datetime import datetime
 import pandas as pd
-import sqlite3
-from sqlite3 import Error
 from tqdm import tqdm
 import ccxt
 import time
+
+
+def parse_cerebro(cerebro_results,strategy,optreturn=True):
+        
+    # IS OPTIMIZER RESULTS
+    if isinstance(cerebro_results[0],list):
+        
+        # GATHER OPTRETURN ITEMS
+        contents = list(vars(cerebro_results[0][0]).keys())
+        
+        # IF OPTRETURN
+        if (len(contents)==4) | optreturn :
+            
+            if strategy == 'dic':
+        
+                results = [
+                    [
+                        r[0].params.symbol
+                        ,r[0].params.cash
+                        ,r[0].params.risk
+                        ,r[0].params.factor
+                        ,r[0].params.multiplier
+                        ,r[0].params.wma_period
+                        ,r[0].params.period
+                        ,r[0].params.short_positions
+                        ,r[0].params.stoploss
+                        ,r[0].params.takeprofit
+                        # tradeanalyzer
+                        ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['total']['total']
+                        ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['total']['open']
+                        ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['total']['closed']
+                        ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['streak']['won']['longest']
+                        ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['streak']['lost']['longest']
+                        ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['pnl']['gross']['total']
+                        ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['pnl']['gross']['average']
+                        ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['pnl']['net']['total']
+                        ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['pnl']['net']['average']
+                        ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['won']['total']
+                        ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['won']['pnl']['total']
+                        ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['won']['pnl']['average']
+                        ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['won']['pnl']['max']
+                        ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['lost']['total']
+                        ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['lost']['pnl']['total']
+                        ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['lost']['pnl']['average']
+                        ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['lost']['pnl']['max']
+                        ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['long']['total']
+                        ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['long']['pnl']['total']
+                        ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['long']['pnl']['average']
+                        ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['long']['pnl']['won']['total']
+                        ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['long']['pnl']['won']['average']
+                        ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['long']['pnl']['won']['max']
+                        ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['long']['pnl']['lost']['total']
+                        ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['long']['pnl']['lost']['average']
+                        ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['long']['pnl']['lost']['max']
+                        ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['short']['total']
+                        ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['short']['pnl']['total']
+                        ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['short']['pnl']['average']
+                        ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['short']['pnl']['won']['total']
+                        ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['short']['pnl']['won']['average']
+                        ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['short']['pnl']['won']['max']
+                        ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['short']['pnl']['lost']['total']
+                        ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['short']['pnl']['lost']['average']
+                        ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['short']['pnl']['lost']['max']
+                        # drawdown analyzer
+                        ,r[0].analyzers.getbyname('drawdown').get_analysis()['drawdown']
+                        ,r[0].analyzers.getbyname('drawdown').get_analysis()['moneydown']
+                        ,r[0].analyzers.getbyname('drawdown').get_analysis()['max']['drawdown']
+                        ,r[0].analyzers.getbyname('drawdown').get_analysis()['max']['moneydown']
+                        # returns
+                        ,r[0].analyzers.getbyname('returns').get_analysis()['rtot']
+                        ,r[0].analyzers.getbyname('returns').get_analysis()['ravg']
+                        ,r[0].analyzers.getbyname('returns').get_analysis()['rnorm']
+                        ,r[0].analyzers.getbyname('returns').get_analysis()['rnorm100']
+                        ]
+                    for r in cerebro_results]
+                
+                columns = [
+                    'symbol','starting_cash','risk',
+                    'factor','multiplier','wma_period','period','short_positions','stoploss','takeprofit',
+                    'td_total_total','td_total_open','td_total_closed',
+                    'td_streak_won_longest','td_streak_lost_longest','td_pnl_gross_total','td_pnl_gross_average','td_pnl_net_total','td_pnl_net_average',
+                    'td_won_total','td_won_pnl_total','td_won_pnl_average','td_won_pnl_max',
+                    'td_lost_total','td_lost_pnl_total','td_lost_pnl_average','td_lost_pnl_max',
+                    'td_long_total','td_long_pnl_total','td_long_pnl_average','td_long_pnl_won_total','td_long_pnl_won_average','td_long_pnl_won_max',
+                    'td_long_pnl_lost_total','td_long_pnl_lost_average','td_long_pnl_lost_max',
+                    'td_short_total','td_short_pnl_total','td_short_pnl_average','td_short_pnl_won_total','td_short_pnl_won_average','td_short_pnl_won_max',
+                    'td_short_pnl_lost_total','td_short_pnl_lost_average','td_short_pnl_lost_max',
+                    'dd_dd','dd_md','dd_max_dd','dd_max_md',
+                    'rt_rtot','rt_ravg','rt_rnorm','rt_rnorm100']
+
+                dfr = pd.DataFrame(results,columns = columns).sort_values(by=['td_pnl_gross_total'],ascending=False)
+                
+                dfr.insert(3, "indicative_position_size", (dfr['risk'] * dfr['starting_cash'].astype(int))/dfr['stoploss'].astype(float))
+                dfr.insert(4, "stake_in_usd", (dfr['risk'] * dfr['starting_cash'].astype(int)))
+                dfr.insert(5, "accuracy", dfr['td_won_total']/dfr['td_total_total'])
+                dfr.insert(6, "total_signals", dfr['td_total_total'])
+                dfr.insert(7, "gross_profit_pct", dfr['td_pnl_gross_total']/dfr['starting_cash'].astype(int))
+                dfr.insert(8, "net_profit_pct", dfr['td_pnl_net_total']/dfr['starting_cash'].astype(int))
+            
+            
+            if strategy == '3h':
+                
+                print(f'No parsing method has been set')
+
+        # IF OPTRETURN FALSE    
+        else:
+            
+            if strategy == 'dic':
+                
+                results = [
+                    [
+                    r[0].params.symbol
+                    ,r[0].params.cash
+                    ,r[0].starting_cash
+                    ,r[0].pnl
+                    ,r[0].total_signals
+                    ,r[0].accuracy_rate
+                    ,r[0].params.wma_period
+                    ,r[0].params.stoploss
+                    ,r[0].params.takeprofit
+                    ,r[0].params.short_positions
+                    ,r[0].params.period
+                    ,r[0].params.factor
+                    ,r[0].params.multiplier
+                    # tradeanalyzer
+                    ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['total']['total']
+                    ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['total']['open']
+                    ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['total']['closed']
+                    ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['streak']['won']['longest']
+                    ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['streak']['lost']['longest']
+                    ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['pnl']['gross']['total']
+                    ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['pnl']['gross']['average']
+                    ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['pnl']['net']['total']
+                    ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['pnl']['net']['average']
+                    ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['won']['total']
+                    ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['won']['pnl']['total']
+                    ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['won']['pnl']['average']
+                    ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['won']['pnl']['max']
+                    ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['lost']['total']
+                    ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['lost']['pnl']['total']
+                    ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['lost']['pnl']['average']
+                    ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['lost']['pnl']['max']
+                    ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['long']['total']
+                    ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['long']['pnl']['total']
+                    ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['long']['pnl']['average']
+                    ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['long']['pnl']['won']['total']
+                    ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['long']['pnl']['won']['average']
+                    ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['long']['pnl']['won']['max']
+                    ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['long']['pnl']['lost']['total']
+                    ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['long']['pnl']['lost']['average']
+                    ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['long']['pnl']['lost']['max']
+                    ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['short']['total']
+                    ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['short']['pnl']['total']
+                    ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['short']['pnl']['average']
+                    ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['short']['pnl']['won']['total']
+                    ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['short']['pnl']['won']['average']
+                    ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['short']['pnl']['won']['max']
+                    ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['short']['pnl']['lost']['total']
+                    ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['short']['pnl']['lost']['average']
+                    ,r[0].analyzers.getbyname('tradeanalyzer').get_analysis()['short']['pnl']['lost']['max']
+                    # drawdown analyzer
+                    ,r[0].analyzers.getbyname('drawdown').get_analysis()['drawdown']
+                    ,r[0].analyzers.getbyname('drawdown').get_analysis()['moneydown']
+                    ,r[0].analyzers.getbyname('drawdown').get_analysis()['max']['drawdown']
+                    ,r[0].analyzers.getbyname('drawdown').get_analysis()['max']['moneydown']
+                    # returns
+                    ,r[0].analyzers.getbyname('returns').get_analysis()['rtot']
+                    ,r[0].analyzers.getbyname('returns').get_analysis()['ravg']
+                    ,r[0].analyzers.getbyname('returns').get_analysis()['rnorm']
+                    ,r[0].analyzers.getbyname('returns').get_analysis()['rnorm100']]
+                    for r in cerebro_results]
+
+                columns = [
+                    'risk','symbol',
+                    'starting_cash','pnl','total_signals','accuracy_rate',
+                    'p_wma_period','p_stoploss','p_takeprofit','p_short_positions','p_period','p_factor','p_multiplier',
+                    'td_total_total','td_total_open','td_total_closed',
+                    'td_streak_won_longest','td_streak_lost_longest','td_pnl_gross_total','td_pnl_gross_average','td_pnl_net_total','td_pnl_net_average',
+                    'td_won_total','td_won_pnl_total','td_won_pnl_average','td_won_pnl_max',
+                    'td_lost_total','td_lost_pnl_total','td_lost_pnl_average','td_lost_pnl_max',
+                    'td_long_total','td_long_pnl_total','td_long_pnl_average','td_long_pnl_won_total','td_long_pnl_won_average','td_long_pnl_won_max',
+                    'td_long_pnl_lost_total','td_long_pnl_lost_average','td_long_pnl_lost_max',
+                    'td_short_total','td_short_pnl_total','td_short_pnl_average','td_short_pnl_won_total','td_short_pnl_won_average','td_short_pnl_won_max',
+                    'td_short_pnl_lost_total','td_short_pnl_lost_average','td_short_pnl_lost_max',
+                    'dd_dd','dd_md','dd_max_dd','dd_max_md',
+                    'rt_rtot','rt_ravg','rt_rnorm','rt_rnorm100']
+        
+                dfr = pd.DataFrame(results,columns = columns).sort_values(by=['td_pnl_gross_total'],ascending=False)
+                
+                dfr.insert(3, "indicative_position_size", (dfr['risk'] * dfr['starting_cash'].astype(int))/dfr['stoploss'].astype(float))
+                dfr.insert(4, "stake_in_usd", (dfr['risk'] * dfr['starting_cash'].astype(int)))
+                dfr.insert(5, "accuracy", dfr['td_won_total']/dfr['td_total_total'])
+                dfr.insert(6, "total_signals", dfr['td_total_total'])
+                dfr.insert(7, "gross_profit_pct", dfr['td_pnl_gross_total']/dfr['starting_cash'].astype(int))
+                dfr.insert(8, "net_profit_pct", dfr['td_pnl_net_total']/dfr['starting_cash'].astype(int))
+            
+            else:
+                print(f'No parsing method has been set')
+    
+    # NOT OPTIMIZER RESULTS       
+    else:
+        
+        if strategy=='dic':
+            
+            results = [
+                    [
+                    r.params.symbol
+                    ,r.params.cash
+                    ,r.params.risk
+                    ,r.params.factor
+                    ,r.params.multiplier
+                    ,r.params.wma_period
+                    ,r.params.period
+                    ,r.params.short_positions
+                    ,r.params.stoploss
+                    ,r.params.takeprofit
+                    # tradeanalyzer
+                    ,r.analyzers.getbyname('tradeanalyzer').get_analysis()['total']['total']
+                    ,r.analyzers.getbyname('tradeanalyzer').get_analysis()['total']['open']
+                    ,r.analyzers.getbyname('tradeanalyzer').get_analysis()['total']['closed']
+                    ,r.analyzers.getbyname('tradeanalyzer').get_analysis()['streak']['won']['longest']
+                    ,r.analyzers.getbyname('tradeanalyzer').get_analysis()['streak']['lost']['longest']
+                    ,r.analyzers.getbyname('tradeanalyzer').get_analysis()['pnl']['gross']['total']
+                    ,r.analyzers.getbyname('tradeanalyzer').get_analysis()['pnl']['gross']['average']
+                    ,r.analyzers.getbyname('tradeanalyzer').get_analysis()['pnl']['net']['total']
+                    ,r.analyzers.getbyname('tradeanalyzer').get_analysis()['pnl']['net']['average']
+                    ,r.analyzers.getbyname('tradeanalyzer').get_analysis()['won']['total']
+                    ,r.analyzers.getbyname('tradeanalyzer').get_analysis()['won']['pnl']['total']
+                    ,r.analyzers.getbyname('tradeanalyzer').get_analysis()['won']['pnl']['average']
+                    ,r.analyzers.getbyname('tradeanalyzer').get_analysis()['won']['pnl']['max']
+                    ,r.analyzers.getbyname('tradeanalyzer').get_analysis()['lost']['total']
+                    ,r.analyzers.getbyname('tradeanalyzer').get_analysis()['lost']['pnl']['total']
+                    ,r.analyzers.getbyname('tradeanalyzer').get_analysis()['lost']['pnl']['average']
+                    ,r.analyzers.getbyname('tradeanalyzer').get_analysis()['lost']['pnl']['max']
+                    ,r.analyzers.getbyname('tradeanalyzer').get_analysis()['long']['total']
+                    ,r.analyzers.getbyname('tradeanalyzer').get_analysis()['long']['pnl']['total']
+                    ,r.analyzers.getbyname('tradeanalyzer').get_analysis()['long']['pnl']['average']
+                    ,r.analyzers.getbyname('tradeanalyzer').get_analysis()['long']['pnl']['won']['total']
+                    ,r.analyzers.getbyname('tradeanalyzer').get_analysis()['long']['pnl']['won']['average']
+                    ,r.analyzers.getbyname('tradeanalyzer').get_analysis()['long']['pnl']['won']['max']
+                    ,r.analyzers.getbyname('tradeanalyzer').get_analysis()['long']['pnl']['lost']['total']
+                    ,r.analyzers.getbyname('tradeanalyzer').get_analysis()['long']['pnl']['lost']['average']
+                    ,r.analyzers.getbyname('tradeanalyzer').get_analysis()['long']['pnl']['lost']['max']
+                    ,r.analyzers.getbyname('tradeanalyzer').get_analysis()['short']['total']
+                    ,r.analyzers.getbyname('tradeanalyzer').get_analysis()['short']['pnl']['total']
+                    ,r.analyzers.getbyname('tradeanalyzer').get_analysis()['short']['pnl']['average']
+                    ,r.analyzers.getbyname('tradeanalyzer').get_analysis()['short']['pnl']['won']['total']
+                    ,r.analyzers.getbyname('tradeanalyzer').get_analysis()['short']['pnl']['won']['average']
+                    ,r.analyzers.getbyname('tradeanalyzer').get_analysis()['short']['pnl']['won']['max']
+                    ,r.analyzers.getbyname('tradeanalyzer').get_analysis()['short']['pnl']['lost']['total']
+                    ,r.analyzers.getbyname('tradeanalyzer').get_analysis()['short']['pnl']['lost']['average']
+                    ,r.analyzers.getbyname('tradeanalyzer').get_analysis()['short']['pnl']['lost']['max']
+                    # drawdown analyzer
+                    ,r.analyzers.getbyname('drawdown').get_analysis()['drawdown']
+                    ,r.analyzers.getbyname('drawdown').get_analysis()['moneydown']
+                    ,r.analyzers.getbyname('drawdown').get_analysis()['max']['drawdown']
+                    ,r.analyzers.getbyname('drawdown').get_analysis()['max']['moneydown']
+                    # returns
+                    ,r.analyzers.getbyname('returns').get_analysis()['rtot']
+                    ,r.analyzers.getbyname('returns').get_analysis()['ravg']
+                    ,r.analyzers.getbyname('returns').get_analysis()['rnorm']
+                    ,r.analyzers.getbyname('returns').get_analysis()['rnorm100']
+                    ]
+                    for r in cerebro_results]
+                
+            columns = [
+                'symbol','starting_cash','risk',
+                'factor','multiplier','wma_period','period','short_positions','stoploss','takeprofit',
+                'td_total_total','td_total_open','td_total_closed',
+                'td_streak_won_longest','td_streak_lost_longest','td_pnl_gross_total','td_pnl_gross_average','td_pnl_net_total','td_pnl_net_average',
+                'td_won_total','td_won_pnl_total','td_won_pnl_average','td_won_pnl_max',
+                'td_lost_total','td_lost_pnl_total','td_lost_pnl_average','td_lost_pnl_max',
+                'td_long_total','td_long_pnl_total','td_long_pnl_average','td_long_pnl_won_total','td_long_pnl_won_average','td_long_pnl_won_max',
+                'td_long_pnl_lost_total','td_long_pnl_lost_average','td_long_pnl_lost_max',
+                'td_short_total','td_short_pnl_total','td_short_pnl_average','td_short_pnl_won_total','td_short_pnl_won_average','td_short_pnl_won_max',
+                'td_short_pnl_lost_total','td_short_pnl_lost_average','td_short_pnl_lost_max',
+                'dd_dd','dd_md','dd_max_dd','dd_max_md',
+                'rt_rtot','rt_ravg','rt_rnorm','rt_rnorm100']
+
+            dfr = pd.DataFrame(results,columns = columns).sort_values(by=['td_pnl_gross_total'],ascending=False)
+            
+            dfr.insert(3, "indicative_position_size", (dfr['risk'] * dfr['starting_cash'].astype(int))/dfr['stoploss'].astype(float))
+            dfr.insert(4, "stake_in_usd", (dfr['risk'] * dfr['starting_cash'].astype(int)))
+            dfr.insert(5, "accuracy", dfr['td_won_total']/dfr['td_total_total'])
+            dfr.insert(6, "total_signals", dfr['td_total_total'])
+            dfr.insert(7, "gross_profit_pct", dfr['td_pnl_gross_total']/dfr['starting_cash'].astype(int))
+            dfr.insert(8, "net_profit_pct", dfr['td_pnl_net_total']/dfr['starting_cash'].astype(int))
+            
+    return dfr
+    
 
 def get_stocks_list():
     stock_list_files = [x for x in os.listdir('./data') if x.startswith('nasdaq_screener_')]
