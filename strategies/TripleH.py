@@ -36,8 +36,6 @@ class PAT(bt.Indicator):
         self.tdn = 0
         self.trend = [0,1]
         self.ph = self.pl = 0
-        self.cacheh = 0
-        self.cachel = 0
 
     def log(self, txt, dt=None, doprint=False):
         if self.params.printlog or doprint:
@@ -56,16 +54,13 @@ class PAT(bt.Indicator):
         highest_bar_position = highp.argmax()
         lowest_bar_position = lowp.argmin()
         
-        
-        # if len(self.datas[0]) - self.cacheh > self.p.pivot_period:
-            # check for pivot high
+        # check for pivot high
         if highest_bar_position == (self.p.pivot_period+1):
             self.lines.ph[-(self.p.pivot_period+1)] = self.ph = np.max(highp)
             self.lastpp = np.max(highp)
             # self.cacheh = len(self.datas[0])
-
-        # if len(self.datas[0]) - self.cachel > self.p.pivot_period:
-            # check for pivot low
+            
+        # check for pivot low
         if lowest_bar_position == (self.p.pivot_period+1):
             self.lines.pl[-(self.p.pivot_period+1)] = self.pl = np.min(lowp)
             self.lastpp = np.min(lowp)
@@ -273,6 +268,18 @@ class TripleH(bt.Strategy):
             # CLOSE LONG
             if self.position.size > 0:
                 # TAKE PROFIT
+                
+                ##################### TO USE DIFFERENT RESAMPLE PERIOD #####################
+                # 
+                # self.do open
+                # self.dh high
+                # self.dl low
+                # self.dc close
+                # 
+                # example : self.dc[0] current data close for resampled data
+                # 
+                ############################################################################
+                
                 if self.datahigh[0] >= self.executed_price * (1 + self.params.takeprofit):
                     # self.close()
                     self.sell(exectype=bt.Order.Limit, size=self.size, price=self.executed_price * (1 + self.params.takeprofit))

@@ -9,9 +9,10 @@ strategy_settings_dictionary = {
     
     'dic':{
         'wma_period' : 300,
-        'stoploss' : [0.025,0.03,0.04],
-        'takeprofit' : [0.025,0.03,0.04],
-        'short_positions' : [0,1],
+        'rsi_period' : 14,
+        'stoploss' : 0.025, # [0.025,0.03,0.04]
+        'takeprofit' : 0.025, # [0.025,0.03,0.04]
+        'short_positions' : 1,
         'period' : 110,
         'factor' : 0.618,
         'multiplier' : 3,

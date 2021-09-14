@@ -58,6 +58,7 @@ class Dictum(bt.Strategy):
         ('cash',1000),
         ('risk',0.1),
         ('wma_period',300),
+        ('sma_period',14),
         ('stoploss',0.01),
         ('takeprofit',0.01),
         ('short_positions',0),
@@ -90,7 +91,14 @@ class Dictum(bt.Strategy):
         self.dl = self.datas[1].low
         self.dc = self.datas[1].close
         
+        # 60 minute data
+        self.ho = self.datas[2].open
+        self.hh = self.datas[2].high
+        self.hl = self.datas[2].low
+        self.hc = self.datas[2].close
+        
         # indicators
+        self.rsi = bt.indicators.RSI_SMA(self.datas[2], period = self.params.sma_period)
         self.wma = bt.indicators.WeightedMovingAverage(self.datas[1], period=self.params.wma_period)
         dick = self.dick = DICK(self.datas[1], period = self.p.period, factor = self.p.factor, multiplier = self.p.multiplier)
         dick.plotinfo.subplot = False

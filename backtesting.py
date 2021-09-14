@@ -125,7 +125,12 @@ if __name__ == '__main__':
                 
                 # Add Resample(s)
                 if args.type=='futures1':
-                    cerebro.resampledata(feed, timeframe=bt.TimeFrame.Minutes, compression=15)
+                    
+                    if args.strategy == 'dic':
+                        cerebro.resampledata(feed, timeframe=bt.TimeFrame.Minutes, compression=15)
+                        cerebro.resampledata(feed, timeframe=bt.TimeFrame.Minutes, compression=60)
+                    elif args.strategy == '3h':
+                        cerebro.resampledata(feed, timeframe=bt.TimeFrame.Minutes, compression=15)                
                     
                 # Add Strategy or Optimizer according to parameter input
                 if not optimizer:
