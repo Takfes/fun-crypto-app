@@ -55,19 +55,19 @@ class PAT(bt.Indicator):
         lowest_bar_position = lowp.argmin()
         
         
-        if len(self.datas[0]) - self.cacheh > self.p.pivot_period:
+        # if len(self.datas[0]) - self.cacheh > self.p.pivot_period:
             # check for pivot high
-            if highest_bar_position == (self.p.pivot_period+1):
-                self.lines.ph[-(self.buffering_period)] = self.ph = np.max(highp)
-                self.lastpp = np.max(highp)
-                self.cacheh = len(self.datas[0])
+        if highest_bar_position == (self.p.pivot_period+1):
+            self.lines.ph[-(self.p.pivot_period+1)] = self.ph = np.max(highp)
+            self.lastpp = np.max(highp)
+            # self.cacheh = len(self.datas[0])
 
-        if len(self.datas[0]) - self.cachel > self.p.pivot_period:
+        # if len(self.datas[0]) - self.cachel > self.p.pivot_period:
             # check for pivot low
-            if lowest_bar_position == (self.p.pivot_period+1):
-                self.lines.pl[-(self.buffering_period)] = self.pl = np.min(lowp)
-                self.lastpp = np.min(lowp)
-                self.cachel = len(self.datas[0])
+        if lowest_bar_position == (self.p.pivot_period+1):
+            self.lines.pl[-(self.p.pivot_period+1)] = self.pl = np.min(lowp)
+            self.lastpp = np.min(lowp)
+            # self.cachel = len(self.datas[0])
         
         if self.lastpp != 0:
             
