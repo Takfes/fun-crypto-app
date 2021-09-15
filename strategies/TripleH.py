@@ -118,6 +118,8 @@ class TripleH(bt.Strategy):
               ('risk', 0.25),
               ('stoploss', 0.01),
               ('takeprofit', 0.01),
+              ('trstop', 0),
+              ('trstop_percent', 0.005),
               ('short_positions', 0),
               ('atr_period', 170),
               ('pivot_period', 3),

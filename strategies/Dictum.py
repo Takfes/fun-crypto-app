@@ -62,6 +62,8 @@ class Dictum(bt.Strategy):
         ('rsi_value',57),
         ('stoploss',0.01),
         ('takeprofit',0.01),
+        ('trstop', 0),
+        ('trstop_percent', 0.005),
         ('short_positions',0),
         ('emergency_exit',1),
         ('period', 110),
