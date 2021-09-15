@@ -199,6 +199,8 @@ class Dictum(bt.Strategy):
                 # self.buy(size=self.size)
                 # self.currency_format = str(self.size)[::-1].find('.')
                 self.buy(exectype=bt.Order.Market, size=self.size)
+                if self.params.trstop == 1:
+                    self.sell(exectype=bt.Order.StopTrail, size=self.size, trailpercent=self.params.trstop_percent)
                 self.wallet = self.broker.getvalue()
 
             # OPEN SHORT
@@ -213,6 +215,8 @@ class Dictum(bt.Strategy):
                     # self.sell(size=self.size)
                     # self.currency_format = str(self.size)[::-1].find('.')
                     self.sell(exectype=bt.Order.Market, size=self.size)
+                    if self.params.trstop == 1:
+                        self.buy(exectype=bt.Order.StopTrail, size=self.size, trailpercent=self.params.trstop_percent)
                     self.wallet = self.broker.getvalue()
         
         # CLOSE POSITIONS

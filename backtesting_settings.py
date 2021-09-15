@@ -13,6 +13,8 @@ strategy_settings_dictionary = {
         'rsi_value' : 57,
         'stoploss' : 0.025, # [0.025,0.03,0.04]
         'takeprofit' : 0.025, # [0.025,0.03,0.04]
+        'trstop' : 0,
+        'trstop_percent' : 0.005,
         'emergency_exit' : 1,
         'short_positions' : 1,
         'period' : 110,
@@ -25,6 +27,8 @@ strategy_settings_dictionary = {
     '3h':{
         'stoploss' : 0.025,
         'takeprofit' : 0.025,
+        'trstop' : 0,
+        'trstop_percent' : 0.005,
         'short_positions' : 1,
         'factor' : 6.5,
         'atr_period' : 170,
