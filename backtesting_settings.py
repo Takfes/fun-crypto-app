@@ -10,14 +10,16 @@ strategy_settings_dictionary = {
     'dic':{
         'wma_period' : 300,
         'rsi_period' : 14,
+        'rsi_value' : 57,
         'stoploss' : 0.025, # [0.025,0.03,0.04]
         'takeprofit' : 0.025, # [0.025,0.03,0.04]
+        'emergency_exit' : 1,
         'short_positions' : 1,
         'period' : 110,
         'factor' : 0.618,
         'multiplier' : 3,
         'printlog' : False,
-        'datasize' : 10000
+        'datasize' : 1000
     },
     
     '3h':{

@@ -27,7 +27,6 @@ class PAT(bt.Indicator):
         # indicate min period ; i.e. buffering period
         self.buffering_period = (self.p.pivot_period * 2) + 1
         self.addminperiod(self.buffering_period)
-        #TODO Use 15-min datas for ATR calculation
         self.ATR = bt.indicators.ATR(self.data, period=self.p.atr_period)
 
         self.center = 0
@@ -45,7 +44,6 @@ class PAT(bt.Indicator):
     def next(self):
 
         # grab necessary info
-        # TODO Use 15-min datas for Pivot High-Low calculation
         highp = np.array(self.data.high.get(size=self.buffering_period))
         lowp = np.array(self.data.low.get(size=self.buffering_period))
         closep = np.array(self.data.close.get(size=self.buffering_period))
@@ -151,9 +149,8 @@ class TripleH(bt.Strategy):
         self.dc = self.datas[1].close
 
         # indicators
-        # TODO Use 15-min datas for ATR calculation
         self.ATR = bt.indicators.ATR(self.datas[1], period=self.p.atr_period)
-        pat = self.pat = PAT(self.data, atr_period=self.p.atr_period, pivot_period=self.p.pivot_period, factor=self.p.factor)
+        pat = self.pat = PAT(self.datas[1], atr_period=self.p.atr_period, pivot_period=self.p.pivot_period, factor=self.p.factor)
         pat.plotinfo.subplot = False
 
     def log(self, txt, dt=None, doprint=False):
