@@ -10,7 +10,8 @@ strategy_settings_dictionary = {
     'dic':{
         'wma_period' : 300,
         'rsi_period' : 14,
-        'rsi_value' : 57,
+        'rsi_value_long' : 57,
+        'rsi_value_short' : 57,
         'stoploss' : 0.025, # [0.025,0.03,0.04]
         'takeprofit' : 0.025, # [0.025,0.03,0.04]
         'trstop' : 0,

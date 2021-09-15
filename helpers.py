@@ -30,7 +30,8 @@ def parse_cerebro(cerebro_results,strategy,optreturn=True):
                         ,r[0].params.period
                         ,r[0].params.short_positions
                         ,r[0].params.emergency_exit
-                        ,r[0].params.rsi_value
+                        ,r[0].params.rsi_value_long
+                        ,r[0].params.rsi_value_short
                         ,r[0].params.stoploss
                         ,r[0].params.takeprofit
                         ,r[0].params.trstop
@@ -86,7 +87,7 @@ def parse_cerebro(cerebro_results,strategy,optreturn=True):
                 
                 columns = [
                     'symbol','starting_cash','risk',
-                    'factor','multiplier','wma_period','period','short_positions','emergency_exit','rsi_value','stoploss','takeprofit','trstop','trstop_percent',
+                    'factor','multiplier','wma_period','period','short_positions','emergency_exit','rsi_value_long','rsi_value_short','stoploss','takeprofit','trstop','trstop_percent',
                     'td_total_total','td_total_open','td_total_closed',
                     'td_streak_won_longest','td_streak_lost_longest','td_pnl_gross_total','td_pnl_gross_average','td_pnl_net_total','td_pnl_net_average',
                     'td_won_total','td_won_pnl_total','td_won_pnl_average','td_won_pnl_max',
@@ -223,7 +224,8 @@ def parse_cerebro(cerebro_results,strategy,optreturn=True):
                     ,r[0].params.trstop_percent
                     ,r[0].params.short_positions
                     ,r[0].params.emergency_exit
-                    ,r[0].params.rsi_value
+                    ,r[0].params.rsi_value_long
+                    ,r[0].params.rsi_value_short
                     ,r[0].params.period
                     ,r[0].params.factor
                     ,r[0].params.multiplier
@@ -278,7 +280,7 @@ def parse_cerebro(cerebro_results,strategy,optreturn=True):
                 columns = [
                     'risk','symbol',
                     'starting_cash','pnl','total_signals','accuracy_rate',
-                    'p_wma_period','p_stoploss','p_takeprofit','p_trstop','p_trstop_percent','p_short_positions','emergency_exit','rsi_value','p_period','p_factor','p_multiplier',
+                    'p_wma_period','p_stoploss','p_takeprofit','p_trstop','p_trstop_percent','p_short_positions','emergency_exit','rsi_value_long','rsi_value_short','p_period','p_factor','p_multiplier',
                     'td_total_total','td_total_open','td_total_closed',
                     'td_streak_won_longest','td_streak_lost_longest','td_pnl_gross_total','td_pnl_gross_average','td_pnl_net_total','td_pnl_net_average',
                     'td_won_total','td_won_pnl_total','td_won_pnl_average','td_won_pnl_max',
@@ -413,7 +415,8 @@ def parse_cerebro(cerebro_results,strategy,optreturn=True):
                     ,r.params.period
                     ,r.params.short_positions
                     ,r.params.emergency_exit
-                    ,r.params.rsi_value
+                    ,r.params.rsi_value_long
+                    ,r.params.rsi_value_short
                     ,r.params.stoploss
                     ,r.params.takeprofit
                     ,r.params.trstop
@@ -469,7 +472,7 @@ def parse_cerebro(cerebro_results,strategy,optreturn=True):
                 
             columns = [
                 'symbol','starting_cash','risk',
-                'factor','multiplier','wma_period','period','short_positions','emergency_exit','rsi_value','stoploss','takeprofit','trstop','trstop_percent',
+                'factor','multiplier','wma_period','period','short_positions','emergency_exit','rsi_value_long','rsi_value_short','stoploss','takeprofit','trstop','trstop_percent',
                 'td_total_total','td_total_open','td_total_closed',
                 'td_streak_won_longest','td_streak_lost_longest','td_pnl_gross_total','td_pnl_gross_average','td_pnl_net_total','td_pnl_net_average',
                 'td_won_total','td_won_pnl_total','td_won_pnl_average','td_won_pnl_max',
