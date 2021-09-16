@@ -12,30 +12,30 @@ strategy_settings_dictionary = {
         'rsi_period' : 14,
         'rsi_value_long' : 57,
         'rsi_value_short' : 57,
-        'stoploss' : 0.025, # [0.025,0.03,0.04]
-        'takeprofit' : 0.025, # [0.025,0.03,0.04]
+        'stoploss' : [0.025,0.03], # [0.025,0.03,0.04]
+        'takeprofit' : [0.025,0.03], # [0.025,0.03,0.04]
         'trstop' : 0,
         'trstop_percent' : 0.005,
-        'emergency_exit' : 1,
+        'emergency_exit' : [0,1],
         'short_positions' : 1,
         'period' : 110,
         'factor' : 0.618,
         'multiplier' : 3,
         'printlog' : False,
-        'datasize' : 1000
+        'datasize' : 100000
     },
     
     '3h':{
-        'stoploss' : 0.025,
-        'takeprofit' : 0.025,
+        'stoploss' : [0.025,0.03],
+        'takeprofit' : [0.025,0.03],
         'trstop' : 0,
         'trstop_percent' : 0.005,
         'short_positions' : 1,
         'factor' : 6.5,
         'atr_period' : 170,
         'pivot_period' : 100,
-        'printlog' : True,
-        'datasize' : 1000
+        'printlog' : False,
+        'datasize' : 100000
     }
 }
 

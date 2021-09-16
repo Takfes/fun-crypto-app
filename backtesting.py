@@ -26,11 +26,11 @@ optimizer = False
 optreturn = True
 
 # type = 'futures1'
-# symbol = 'ETHUSDT'
+# symbol = 'BTCUSDT'
 # strategy = '3h'
-# cash = 10000
+# cash = 100
 # risk = 0.025
-# datasize = 10000
+# datasize = 100
 
 def parse_user_input():
     parser = argparse.ArgumentParser()
@@ -130,7 +130,7 @@ if __name__ == '__main__':
                         cerebro.resampledata(feed, timeframe=bt.TimeFrame.Minutes, compression=15)
                         cerebro.resampledata(feed, timeframe=bt.TimeFrame.Minutes, compression=60)
                     elif args.strategy == '3h':
-                        cerebro.resampledata(feed, timeframe=bt.TimeFrame.Minutes, compression=15)                
+                        cerebro.resampledata(feed, timeframe=bt.TimeFrame.Minutes, compression=15)
                     
                 # Add Strategy or Optimizer according to parameter input
                 if not optimizer:
@@ -282,6 +282,7 @@ if __name__ == '__main__':
                     else:
                         R = cerebro.run(stdstats=False,optreturn=False)
                         print(f'>>> Cerebro finished {len(R)} trials !!! <<<')
+                        # dfr = parse_cerebro(R,strategy = strategy).sort_values(by=['td_pnl_gross_total'],ascending=False)
                         dfr = parse_cerebro(R,strategy = args.strategy).sort_values(by=['td_pnl_gross_total'],ascending=False)
                         dfr.insert(0, "strategy", args.strategy)
                         timetag = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -290,7 +291,8 @@ if __name__ == '__main__':
                 # Results w/o optimizer
                 else:
                     R = cerebro.run()
-                    dfr = parse_cerebro(R,strategy='dic').sort_values(by=['td_pnl_gross_total'],ascending=False)
+                    # dfr = parse_cerebro(R,strategy='3h').sort_values(by=['td_pnl_gross_total'],ascending=False)
+                    dfr = parse_cerebro(R,strategy=args.strategy).sort_values(by=['td_pnl_gross_total'],ascending=False)
                     dfr.insert(0, "strategy", args.strategy)
                     timetag = datetime.now().strftime("%Y%m%d_%H%M%S")
                     dfr.to_csv(f'./cerebro_results/noopt_{args.strategy}_{timetag}_{args.symbol}.csv', index=False)
