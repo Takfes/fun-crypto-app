@@ -296,6 +296,7 @@ if __name__ == '__main__':
                     dfr.insert(0, "strategy", args.strategy)
                     timetag = datetime.now().strftime("%Y%m%d_%H%M%S")
                     dfr.to_csv(f'./cerebro_results/noopt_{args.strategy}_{timetag}_{args.symbol}.csv', index=False)
+                    
                     end_portfolio_value = cerebro.broker.getvalue()
                     pnl = end_portfolio_value - start_portfolio_value
                     print(f'\nStarting Portfolio Value: {start_portfolio_value:.2f}')
