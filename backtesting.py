@@ -1,5 +1,6 @@
 from helpers import parse_cerebro
 import os, sys, argparse, time
+from pathlib import Path
 from datetime import datetime
 import config
 import sqlite3
@@ -91,7 +92,8 @@ if __name__ == '__main__':
             print(f'OPTIMIZER IS NOW OPEN')
 
     try:
-        con = sqlite3.connect(config.DB_NAME)
+        DATABASE_PATH = Path(config.DB_DIRECTORY) / config.DB_NAME
+        con = sqlite3.connect(DATABASE_PATH)
         # price_series = get_price_series(type,symbol,con,datasize)
         price_series = get_price_series(args.type,args.symbol,con,datasize)
         print(f'> backtesting.py : fetched latest {price_series.shape[0]} rows for {args.symbol}')

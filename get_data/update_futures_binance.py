@@ -7,6 +7,7 @@ from binance_f.model import CandlestickInterval
 from binance_f.base.printobject import PrintMix
 from contextlib import contextmanager
 import sys, os
+from pathlib import Path
 import sqlite3
 import pandas as pd
 
@@ -58,78 +59,87 @@ def get_maxts_per_symbol(db_file,verbose=True):
     start = time.time()
     try:
         con = sqlite3.connect(db_file)
-    except Exception as e:
-        print(e)
-        print('Did not connect to the database')
-        
-    sql_query = '''
+        sql_query = '''
                 SELECT symbol,MAX(closeTimets) maxclosetimets
                 FROM futures1
                 GROUP BY 1
                 ORDER BY 1;
                 '''
-    print(f'Querying the db...')
-    df = pd.read_sql(sql_query, con)
-    end = time.time()
-    if verbose:
-        print(f'Took {end-start} to fetch data from the db')
-    con.close()
+        print(f'Querying the db...')
+        df = pd.read_sql(sql_query, con)
+    except Exception as e:
+        print(e)
+        print('Did not connect to the database')    
+    finally:
+        con.close()
+        end = time.time()
+        if verbose:
+            print(f'Took {end-start} to fetch data from the db')
     return df
 
 if __name__=="__main__":
     
     # define objects
-    db_file = '../'+config.DB_NAME
+    DATABASE_PATH = '..' / Path(config.DB_DIRECTORY) / config.DB_NAME
     INTERVAL = CandlestickInterval.MIN1
     bclient = RequestClient(api_key=apikeys.BINANCE_API_KEY, secret_key=apikeys.BINANCE_API_SECRET)
     dflist = []
     
     # connect to db and fetch data
-    dbdata = get_maxts_per_symbol(db_file)
+    dbdata = get_maxts_per_symbol(DATABASE_PATH)
     
     # start request timer
     start = time.time()
 
-    for sym in tqdm(dbdata.symbol.unique().tolist()):
+    try :
+        for sym in tqdm(dbdata.symbol.unique().tolist()):
 
-        print(f'parsing : {sym}')
-        
-        end_time = None
-        end_time_symbol = None
-        while_condition = True
-        max_existing_symbol_closetime = dbdata.query('symbol==@sym').maxclosetimets.squeeze()
+            print(f'parsing : {sym}')
+            
+            end_time = None
+            end_time_symbol = None
+            while_condition = True
+            max_existing_symbol_closetime = dbdata.query('symbol==@sym').maxclosetimets.squeeze()
 
-        while while_condition:
+            while while_condition:
 
-            with suppress_stdout():
-                if end_time:
-                    results = bclient.get_candlestick_data(symbol=sym,interval=INTERVAL,endTime=end_time,limit=1000);
+                with suppress_stdout():
+                    if end_time:
+                        results = bclient.get_candlestick_data(symbol=sym,interval=INTERVAL,endTime=end_time,limit=1000);
+                    else:
+                        results = bclient.get_candlestick_data(symbol=sym,interval=INTERVAL,endTime=None,limit=1000);
+
+                df = binance_candles_to_df(results,sym)
+                end_time = df.openTimets.min()
+                dflist.append(df)
+
+                # if there is overlap between downloaded and existing data
+                if max_existing_symbol_closetime in df.closeTimets.tolist():
+                    while_condition = False
+
+                # if end time symbol has occured again then stop
+                if not end_time_symbol:
+                    end_time_symbol = str(end_time) + sym
                 else:
-                    results = bclient.get_candlestick_data(symbol=sym,interval=INTERVAL,endTime=None,limit=1000);
-
-            df = binance_candles_to_df(results,sym)
-            end_time = df.openTimets.min()
-            dflist.append(df)
-
-            if not end_time_symbol:
-                end_time_symbol = str(end_time) + sym
-            else:
-                if end_time_symbol != str(end_time) + sym:
-                    if max_existing_symbol_closetime not in df.closeTimets.tolist():
+                    if end_time_symbol != str(end_time) + sym:
                         end_time_symbol = str(end_time) + sym
                     else:
                         while_condition = False
-                else:
-                    while_condition = False
 
-    end=time.time()
+    except Exception as e:
+        print(e)
 
-    dt = pd.concat(dflist,ignore_index=True)
-    qq = dt.drop_duplicates(subset=['symbol','openTimets'])
-    report = qq.groupby(['symbol'])['openTime'].agg(['size','min','max']).reset_index()
-    filename = f'{datetime.now().strftime("%Y%m%d_%H%M%S")}_{qq.symbol.nunique()}'
-    
-    print(f'Process took {int(end-start)} seconds to download {len(dflist)} objects for a total of {qq.shape[0]} rows')
-    qq.to_pickle(filename+'.pkl')
-    report.to_csv(filename+'_report.csv',index=False)
+    finally:
+
+        end=time.time()
+
+        dt = pd.concat(dflist,ignore_index=True)
+        qq = dt.drop_duplicates(subset=['symbol','openTimets'])
+        report = qq.groupby(['symbol'])['openTime'].agg(['size','min','max']).reset_index()
+        filename = f'{datetime.now().strftime("%Y%m%d_%H%M%S")}_{qq.symbol.nunique()}'
+        
+        print(f'Process took {int(end-start)} seconds to download {len(dflist)} objects for a total of {qq.shape[0]} rows')
+        qq.to_pickle('../data/'+filename+'.pkl')
+        report.to_csv('../data/'+filename+'_report.csv',index=False)
+
 

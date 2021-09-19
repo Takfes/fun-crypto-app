@@ -1,31 +1,37 @@
 from tqdm import tqdm
-import os, time
+import os, time, sys
+from pathlib import Path
 import pandas as pd
 import numpy as np
 import sqlite3
 from datetime import datetime
+
+sys.path.append('../')
 import config
 
-# define constants
-DB_NAME = config.DB_NAME
+# define objects
 TABLE_NAME = config.DB_ASSET_TABLE_FUTURES_1
+ORIGIN_PATH = '..' / Path(config.DB_DIRECTORY)
+DATABASE_PATH = '..' / Path(config.DB_DIRECTORY) / config.DB_NAME
 
 if __name__ == '__main__':
 
     start_ttl = time.time()
-    dir_path = os.path.dirname(os.path.realpath(__file__))
-    db_file = os.path.join(dir_path, DB_NAME)
-    print(f'db_file:{db_file}')
+    # dir_path = os.path.dirname(os.path.realpath(__file__))
+    # db_file = os.path.join(dir_path, DB_NAME)
+    print(f'db_file:{DATABASE_PATH}')
 
-    pickles = [x for x in os.listdir() if x.endswith('.pkl')]
+    # pickles = [x for x in os.listdir() if x.endswith('.pkl')]
+    pickles = [x for x in os.listdir(ORIGIN_PATH) if x.endswith('.pkl')]
 
-    con = sqlite3.connect(db_file)
+    con = sqlite3.connect(DATABASE_PATH)
     cursor = con.cursor()
 
     for pic in pickles:
         start = time.time()
         ttl_rows = 0
-        raw = pd.read_pickle(pic)
+        pickle_path = ORIGIN_PATH / pic
+        raw = pd.read_pickle(pickle_path)
         df = raw.copy()
 
         df["latest"] = df.groupby(["symbol"])["openTimets"].transform("max")

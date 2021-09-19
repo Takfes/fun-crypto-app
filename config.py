@@ -1,7 +1,8 @@
 
 # ------------------ DB CONFIG ------------------ #
 
-DB_NAME ='data/assets.db'
+DB_DIRECTORY = 'data'
+DB_NAME ='assets.db'
 
 DB_ASSET_TABLE = 'assets'
 DB_ASSET_TABLE_INDEX = 'time_symbol'
