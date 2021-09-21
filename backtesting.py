@@ -303,7 +303,7 @@ if __name__ == '__main__':
                     print(f'PnL: {pnl:.2f} - {(pnl/end_portfolio_value)*100:.2f}%')
                     
                     # Plot Results
-                    cerebro.plot()
+                    #cerebro.plot()
     
     except Exception as e:
         print('Error in cerebro section ; EXITING ...')
