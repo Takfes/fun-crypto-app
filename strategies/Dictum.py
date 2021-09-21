@@ -231,8 +231,8 @@ class Dictum(bt.Strategy):
                     self.log(f'(3) CLOSE LONG position at {self.executed_price * (1 + self.params.takeprofit):.2f}')
                     self.profit_loss = "profit"
                 elif (self.params.emergency_exit == 1) and (self.rsi < self.params.rsi_value_long) and (self.datahigh[0] > self.executed_price):
-                    self.sell(exectype=bt.Order.Limit, size=self.size, price=self.executed_price * (1 + self.params.takeprofit))
-                    self.log(f'(3) EMERGENCY EXIT: CLOSE LONG position at {self.executed_price * (1 + self.params.takeprofit):.2f}')
+                    self.sell(exectype=bt.Order.Market, size=self.size)
+                    self.log(f'(3) EMERGENCY EXIT: CLOSE LONG position at {self.executed_price:.2f}')
                     self.profit_loss = "profit"
                 # STOP LOSS
                 if self.datalow[0] <= self.executed_price * (1 - self.params.stoploss):
@@ -251,8 +251,8 @@ class Dictum(bt.Strategy):
                         self.log(f'(3) CLOSE SHORT position at {self.executed_price * (1 - self.params.takeprofit):.2f}')
                         self.profit_loss = "profit"
                     elif (self.params.emergency_exit == 1) and (self.rsi > self.params.rsi_value_short) and (self.datahigh[0] < self.executed_price):
-                        self.buy(exectype=bt.Order.Limit, size=self.size, price=self.executed_price * (1 - self.params.takeprofit))
-                        self.log(f'(3) EMERGENCY EXIT: CLOSE SHORT position at {self.executed_price * (1 - self.params.takeprofit):.2f}')
+                        self.buy(exectype=bt.Order.Market, size=self.size)
+                        self.log(f'(3) EMERGENCY EXIT: CLOSE SHORT position at {self.executed_price:.2f}')
                         self.profit_loss = "profit"
                     # STOP LOSS
                     if self.datahigh[0] >= self.executed_price * (1 + self.params.stoploss):
