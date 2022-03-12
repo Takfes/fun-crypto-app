@@ -1,5 +1,4 @@
 import time
-import config
 import pandas as pd
 from tqdm import tqdm
 from datetime import datetime
@@ -9,6 +8,10 @@ from binance_f.base.printobject import PrintMix
 
 from contextlib import contextmanager
 import sys, os
+
+sys.path.append('../')
+import config
+import apikeys
 
 @contextmanager
 def suppress_stdout():
@@ -54,7 +57,7 @@ if __name__=="__main__":
     start = time.time()
     INTERVAL = CandlestickInterval.MIN15
     symbols = config.PREXTICKS
-    bclient = RequestClient(api_key=config.BINANCE_API_KEY, secret_key=config.BINANCE_API_SECRET)
+    bclient = RequestClient(api_key=apikeys.BINANCE_API_KEY, secret_key=apikeys.BINANCE_API_SECRET)
     dflist = []
 
     for sym in tqdm(symbols):
