@@ -9,3 +9,4 @@ __pycache__/
 apikeys.py
 *.csv
 *.pkl
+!data/eth.pkl
